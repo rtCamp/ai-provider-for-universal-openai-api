@@ -1,9 +1,9 @@
 <?php
 /**
- * PSR-4 autoloader for Universal OpenAI Connector.
+ * PSR-4 autoloader for AI Provider for Universal OpenAI API.
  *
  * @since 1.0.0
- * @package rtCamp\UniversalOpenAiConnector
+ * @package rtCamp\AIProviderUniversalOpenAI
  */
 
 declare( strict_types=1 );
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 spl_autoload_register(
 	static function ( string $class_name ): void {
-		$prefix   = 'rtCamp\\UniversalOpenAiConnector\\';
+		$prefix   = 'rtCamp\\AIProviderUniversalOpenAI\\';
 		$base_dir = __DIR__ . '/';
 
 		$len = strlen( $prefix );

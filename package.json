@@ -1,5 +1,5 @@
 {
-	"name": "universal-openai-connector",
+	"name": "ai-provider-for-universal-openai-api",
 	"private": true,
 	"files": [
 		"build",
@@ -8,11 +8,11 @@
 		"src",
 		"README.md",
 		"readme.txt",
-		"universal-openai-connector.php"
+		"ai-provider-for-universal-openai-api.php"
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/rtcamp/universal-openai-connector.git"
+		"url": "https://github.com/rtcamp/ai-provider-for-universal-openai-api.git"
 	},
 	"engines": {
 		"node": ">=22.0.0",
@@ -58,7 +58,7 @@
 		"lint:php": "composer run-script lint",
 		"lint": "npm-run-all --parallel lint:*",
 		"plugin-zip": "wp-scripts plugin-zip",
-		"i18n:pot": "wp i18n make-pot . languages/universal-openai-connector.pot --domain=universal-openai-connector --exclude=node_modules,vendor,tests"
+		"i18n:pot": "wp i18n make-pot . languages/ai-provider-for-universal-openai-api.pot --domain=ai-provider-for-universal-openai-api --exclude=node_modules,vendor,tests"
 	},
 	"overrides": {
 		"eslint": "^8.57.1",

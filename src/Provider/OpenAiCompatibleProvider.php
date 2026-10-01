@@ -3,12 +3,12 @@
  * OpenAI Compatible provider.
  *
  * @since 1.0.0
- * @package rtCamp\UniversalOpenAiConnector
+ * @package rtCamp\AIProviderUniversalOpenAI
  */
 
 declare( strict_types=1 );
 
-namespace rtCamp\UniversalOpenAiConnector\Provider;
+namespace rtCamp\AIProviderUniversalOpenAI\Provider;
 
 use WordPress\AiClient\Providers\ApiBasedImplementation\AbstractApiProvider;
 use WordPress\AiClient\Providers\Contracts\ModelMetadataDirectoryInterface;
@@ -18,10 +18,10 @@ use WordPress\AiClient\Providers\Enums\ProviderTypeEnum;
 use WordPress\AiClient\Providers\Http\Enums\RequestAuthenticationMethod;
 use WordPress\AiClient\Providers\Models\Contracts\ModelInterface;
 use WordPress\AiClient\Providers\Models\DTO\ModelMetadata;
-use rtCamp\UniversalOpenAiConnector\Metadata\OpenAiCompatibleModelMetadataDirectory;
-use rtCamp\UniversalOpenAiConnector\Models\OpenAiCompatibleImageGenerationModel;
-use rtCamp\UniversalOpenAiConnector\Models\OpenAiCompatibleTextGenerationModel;
-use rtCamp\UniversalOpenAiConnector\Settings\OpenAiCompatibleSettings;
+use rtCamp\AIProviderUniversalOpenAI\Metadata\OpenAiCompatibleModelMetadataDirectory;
+use rtCamp\AIProviderUniversalOpenAI\Models\OpenAiCompatibleImageGenerationModel;
+use rtCamp\AIProviderUniversalOpenAI\Models\OpenAiCompatibleTextGenerationModel;
+use rtCamp\AIProviderUniversalOpenAI\Settings\OpenAiCompatibleSettings;
 
 /**
  * Class OpenAiCompatibleProvider.
@@ -61,6 +61,8 @@ class OpenAiCompatibleProvider extends AbstractApiProvider {
 		$base_url = static::baseUrl();
 		$url      = parent::url( $path );
 
+		$url = apply_filters( 'ai_provider_for_universal_openai_api_url', $url, $path, $base_url );
+
 		return apply_filters( 'universal_openai_connector_url', $url, $path, $base_url );
 	}
 
@@ -97,12 +99,12 @@ class OpenAiCompatibleProvider extends AbstractApiProvider {
 	protected static function createProviderMetadata(): ProviderMetadata {
 		return new ProviderMetadata(
 			'openai_compatible',
-			__( 'Universal OpenAI Connector', 'universal-openai-connector' ),
+			__( 'AI Provider for Universal OpenAI API', 'ai-provider-for-universal-openai-api' ),
 			ProviderTypeEnum::cloud(),
 			'',
 			RequestAuthenticationMethod::apiKey(),
-			__( 'Access any AI service supporting the OpenAI API for text and image creation.', 'universal-openai-connector' ),
-			UNIVERSAL_OPENAI_CONNECTOR_PLUGIN_DIR . 'assets/images/openai-api.svg'
+			__( 'Access any AI service supporting the OpenAI API for text and image creation.', 'ai-provider-for-universal-openai-api' ),
+			AI_PROVIDER_FOR_UNIVERSAL_OPENAI_API_PLUGIN_DIR . 'assets/images/openai-api.svg'
 		);
 	}
 

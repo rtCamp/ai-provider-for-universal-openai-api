@@ -1,13 +1,14 @@
 {
-    "name": "rtcamp/universal-openai-connector",
+    "name": "rtcamp/ai-provider-for-universal-openai-api",
     "version": "1.1.0",
-    "description": "Universal OpenAI Connector for the PHP AI Client SDK. Works as both a Composer package and WordPress plugin.",
+    "description": "AI Provider for Universal OpenAI API for the PHP AI Client SDK. Works as both a Composer package and WordPress plugin.",
     "license": "GPL-2.0-or-later",
     "keywords": [
         "ai",
         "openai",
         "llm",
-        "connector",
+        "provider",
+        "ai provider",
         "openai api"
     ],
     "authors": [
@@ -16,10 +17,10 @@
             "homepage": "https://rtcamp.com"
         }
     ],
-    "homepage": "https://github.com/rtcamp/universal-openai-connector",
+    "homepage": "https://github.com/rtcamp/ai-provider-for-universal-openai-api",
     "support": {
-        "issues": "https://github.com/rtcamp/universal-openai-connector/issues",
-        "source": "https://github.com/rtcamp/universal-openai-connector"
+        "issues": "https://github.com/rtcamp/ai-provider-for-universal-openai-api/issues",
+        "source": "https://github.com/rtcamp/ai-provider-for-universal-openai-api"
     },
     "require": {
         "php": ">=7.4"
@@ -41,7 +42,7 @@
     ],
     "autoload": {
         "psr-4": {
-            "rtCamp\\UniversalOpenAiConnector\\": "src/"
+            "rtCamp\\AIProviderUniversalOpenAI\\": "src/"
         }
     },
     "require-dev": {

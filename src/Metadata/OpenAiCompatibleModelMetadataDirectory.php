@@ -3,12 +3,12 @@
  * Model metadata directory for OpenAI-compatible provider.
  *
  * @since 1.0.0
- * @package rtCamp\UniversalOpenAiConnector
+ * @package rtCamp\AIProviderUniversalOpenAI
  */
 
 declare( strict_types=1 );
 
-namespace rtCamp\UniversalOpenAiConnector\Metadata;
+namespace rtCamp\AIProviderUniversalOpenAI\Metadata;
 
 use WordPress\AiClient\Files\Enums\FileTypeEnum;
 use WordPress\AiClient\Files\Enums\MediaOrientationEnum;
@@ -18,7 +18,7 @@ use WordPress\AiClient\Providers\Models\DTO\ModelMetadata;
 use WordPress\AiClient\Providers\Models\DTO\SupportedOption;
 use WordPress\AiClient\Providers\Models\Enums\CapabilityEnum;
 use WordPress\AiClient\Providers\Models\Enums\OptionEnum;
-use rtCamp\UniversalOpenAiConnector\Settings\OpenAiCompatibleSettings;
+use rtCamp\AIProviderUniversalOpenAI\Settings\OpenAiCompatibleSettings;
 
 /**
  * Class OpenAiCompatibleModelMetadataDirectory.

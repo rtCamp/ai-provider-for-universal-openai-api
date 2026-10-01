@@ -35,7 +35,8 @@ phpstan.neon
 
 # Build
 build/
-universal-openai-connector.zip
+ai-provider-for-universal-openai-api.zip
+*.zip
 
 # TSConfig cache
 tsconfig.tsbuildinfo

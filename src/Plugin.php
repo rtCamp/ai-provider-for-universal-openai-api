@@ -3,12 +3,12 @@
  * Main plugin class.
  *
  * @since 1.0.0
- * @package rtCamp\UniversalOpenAiConnector
+ * @package rtCamp\AIProviderUniversalOpenAI
  */
 
 declare( strict_types=1 );
 
-namespace rtCamp\UniversalOpenAiConnector;
+namespace rtCamp\AIProviderUniversalOpenAI;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -16,8 +16,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 use WordPress\AiClient\AiClient;
 use WordPress\AiClient\Providers\Http\DTO\ApiKeyRequestAuthentication;
-use rtCamp\UniversalOpenAiConnector\Provider\OpenAiCompatibleProvider;
-use rtCamp\UniversalOpenAiConnector\Settings\OpenAiCompatibleSettings;
+use rtCamp\AIProviderUniversalOpenAI\Provider\OpenAiCompatibleProvider;
+use rtCamp\AIProviderUniversalOpenAI\Settings\OpenAiCompatibleSettings;
 
 /**
  * Class Plugin.
@@ -35,7 +35,7 @@ class Plugin {
 		add_action( 'init', [ $this, 'initialize_settings' ] );
 		add_action( 'init', [ $this, 'allow_localhost_requests' ], 20 );
 		add_action( 'wp_loaded', [ $this, 'setup_http_request_filters' ] );
-		add_filter( 'plugin_action_links_' . plugin_basename( UNIVERSAL_OPENAI_CONNECTOR_PLUGIN_FILE ), [ $this, 'plugin_action_links' ] );
+		add_filter( 'plugin_action_links_' . plugin_basename( AI_PROVIDER_FOR_UNIVERSAL_OPENAI_API_PLUGIN_FILE ), [ $this, 'plugin_action_links' ] );
 	}
 
 	/**
@@ -215,8 +215,8 @@ class Plugin {
 	public function plugin_action_links( array $links ): array {
 		$settings_link = sprintf(
 			'<a href="%1$s">%2$s</a>',
-			admin_url( 'options-general.php?page=universal-openai-connector' ),
-			esc_html__( 'Settings', 'universal-openai-connector' )
+			admin_url( 'options-general.php?page=ai-provider-for-universal-openai-api' ),
+			esc_html__( 'Settings', 'ai-provider-for-universal-openai-api' )
 		);
 
 		array_unshift( $links, $settings_link );

@@ -18,10 +18,10 @@ parameters:
 			min: 80100
 			max: 80400
 		bootstrapFiles:
-				- universal-openai-connector.php
+				- ai-provider-for-universal-openai-api.php
 
 		paths:
-				- universal-openai-connector.php
+				- ai-provider-for-universal-openai-api.php
 				- src/
 		scanDirectories:
 				- vendor/wordpress/php-ai-client/src/
