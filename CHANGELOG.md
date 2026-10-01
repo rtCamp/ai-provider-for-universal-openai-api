@@ -2,7 +2,7 @@
 
 ## 1.1.0
 
-- Added filters `universal_openai_connector_models_url` and `universal_openai_connector_url` for dynamic endpoint routing in OpenAI connector.
+- Added filters `ai_provider_for_universal_openai_api_models_url` and `ai_provider_for_universal_openai_api_url` for dynamic endpoint routing.
 - Add is_image flag to models and improve UI filtering.
 - Refactor admin settings to TypeScript and modernize build configuration.
 - Modernize settings UI with improved design and alignment.
@@ -17,7 +17,7 @@
 
 ## 1.0.0
 
-- Initial release of Universal OpenAI Connector.
+- Initial release as AI Provider for Universal OpenAI API (formerly Universal OpenAI Connector).
 - OpenAI-compatible REST API model discovery, text generation, and image generation support.
 - Multimodal (vision) input support for vision-capable models.
 - Admin settings page for API endpoint URL, default text model, and default image model.

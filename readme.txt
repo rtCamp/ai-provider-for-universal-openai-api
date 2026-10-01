@@ -1,4 +1,4 @@
-=== Universal OpenAI Connector ===
+=== AI Provider for Universal OpenAI API ===
 Contributors:      rtcamp, milindmore22, vishal4669, aishwarryapande, aviralmittal89
 Tags:              ai, openai, llm, text-generation, image-generation
 Requires at least: 7.0
@@ -17,7 +17,7 @@ This plugin provides an [OpenAI-compatible](https://platform.openai.com/docs/api
 **Features:**
 
 * OpenAI-compatible provider registration for WordPress AI Client.
-* Configure the API endpoint URL, default text model, and default image model from a single settings page (*Settings > Universal OpenAI Connector*).
+* Configure the API endpoint URL, default text model, and default image model from a single settings page (*Settings > AI Provider for Universal OpenAI API*).
 * API key managed through *Settings > Connectors* — no custom credential UI needed.
 * Automatic model discovery via the `/models` endpoint of the configured API (results cached for one hour).
 * Localhost and private-network endpoints fully supported for local AI servers.
@@ -42,16 +42,16 @@ This plugin provides an [OpenAI-compatible](https://platform.openai.com/docs/api
 == Installation ==
 
 1. Ensure the WordPress AI plugin is installed and activated.
-2. Upload the `universal-openai-connector` folder to `/wp-content/plugins/`, or install it via the WordPress admin.
-3. Activate **Universal OpenAI Connector** through the Plugins menu in WordPress.
-4. Go to *Settings > Connectors* and enter your API key for the **Universal OpenAI Connector** provider.
-5. Go to *Settings > Universal OpenAI Connector* and set your **API Endpoint URL** (defaults to `https://api.openai.com/v1`).
+2. Upload the `ai-provider-for-universal-openai-api` folder to `/wp-content/plugins/`, or install it via the WordPress admin.
+3. Activate **AI Provider for Universal OpenAI API** through the Plugins menu in WordPress.
+4. Go to *Settings > Connectors* and enter your API key for the **AI Provider for Universal OpenAI API** provider.
+5. Go to *Settings > AI Provider for Universal OpenAI API* and set your **API Endpoint URL** (defaults to `https://api.openai.com/v1`).
 6. Optionally pick a **Default Text Model** and **Default Image Model** from the automatically-populated dropdowns.
 7. Save the settings.
 
 == Screenshots ==
 
-1. Universal OpenAI Connector provider in Connectors page showing connection status and API key field.
+1. AI Provider for Universal OpenAI API provider in Connectors page showing connection status and API key field.
 2. Settings page showing API endpoint URL, default text model, and default image model dropdowns.
 3. Example of generating post excerpt using OpenRouter in the WordPress editor.
 4. Example of generating an image using OpenRouter in the WordPress editor.
@@ -64,15 +64,15 @@ Any endpoint that implements the OpenAI REST API: the official OpenAI API, Ollam
 
 = Do I need an API key? =
 
-It depends on the service. The official OpenAI API requires an API key. Self-hosted services such as Ollama or LM Studio do not require authentication by default. If authentication is needed, enter your API key in *Settings > Connectors* for the **Universal OpenAI Connector** provider. For local servers that do not require a key, leave the field blank.
+It depends on the service. The official OpenAI API requires an API key. Self-hosted services such as Ollama or LM Studio do not require authentication by default. If authentication is needed, enter your API key in *Settings > Connectors* for the **AI Provider for Universal OpenAI API** provider. For local servers that do not require a key, leave the field blank.
 
 = What endpoint URL is used by default? =
 
-The default is `https://api.openai.com/v1`. You can change this in *Settings > Universal OpenAI Connector* or by setting the `OPENAI_COMPATIBLE_BASE_URL` environment variable.
+The default is `https://api.openai.com/v1`. You can change this in *Settings > AI Provider for Universal OpenAI API* or by setting the `OPENAI_COMPATIBLE_BASE_URL` environment variable.
 
 = Can I change the API endpoint? =
 
-Yes. Enter the full base URL in *Settings > Universal OpenAI Connector > API Endpoint URL*, or set the `OPENAI_COMPATIBLE_BASE_URL` environment variable. The environment variable takes priority over the admin setting.
+Yes. Enter the full base URL in *Settings > AI Provider for Universal OpenAI API > API Endpoint URL*, or set the `OPENAI_COMPATIBLE_BASE_URL` environment variable. The environment variable takes priority over the admin setting.
 
 = Can I use a local AI server running on localhost? =
 
@@ -102,7 +102,7 @@ Generating images can take significant time on slow or self-hosted backends. The
 
 = 1.1.0 =
 
-* Feature: Add filters `universal_openai_connector_models_url` and `universal_openai_connector_url` for dynamic endpoint routing in OpenAI connector.
+* Feature: Add filters `ai_provider_for_universal_openai_api_models_url` and `ai_provider_for_universal_openai_api_url` for dynamic endpoint routing.
 * Feature: Add is_image flag to models and improve UI filtering.
 * Refactor: admin settings to TypeScript and modernize build configuration.
 * Refactor: settings UI with improved design and alignment.
@@ -117,7 +117,7 @@ Generating images can take significant time on slow or self-hosted backends. The
 
 = 1.0.0 =
 
-* Initial release of Universal OpenAI Connector.
+* Initial release as AI Provider for Universal OpenAI API (formerly Universal OpenAI Connector).
 * OpenAI-compatible REST API model discovery, text generation, and image generation support.
 * Multimodal (vision) input support for vision-capable models.
 * Admin settings page for API endpoint URL, default text model, and default image model.

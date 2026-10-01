@@ -1,3 +1,4 @@
+.ai-provider-for-universal-openai-api-settings-wrap,
 .universal-openai-connector-settings-wrap {
 	max-width: 60rem;
 	margin: 24px auto 24px 0;
@@ -19,6 +20,7 @@
 		line-height: 1.5;
 	}
 
+	.ai-provider-for-universal-openai-api-card,
 	.universal-openai-connector-card {
 		background: #fff;
 		border: 1px solid #e2e8f0;
@@ -74,6 +76,7 @@
 	}
 }
 
+.ai-provider-for-universal-openai-api-info-banner,
 .universal-openai-connector-info-banner {
 	display: flex;
 	align-items: center;
@@ -86,6 +89,7 @@
 	max-width: 60rem;
 	box-sizing: border-box;
 
+	.ai-provider-for-universal-openai-api-banner-icon,
 	.universal-openai-connector-banner-icon {
 		color: #0284c7;
 		flex-shrink: 0;
@@ -140,6 +144,7 @@
 }
 
 /* stylelint-disable selector-id-pattern */
+#ai_provider_for_universal_openai_api_settings-endpoint-url-search,
 #universal_openai_connector_settings-endpoint-url-search {
 
 	&.openai-compatible-endpoint-search-input {
@@ -253,6 +258,7 @@
 }
 
 /* stylelint-disable selector-id-pattern */
+.ai-provider-for-universal-openai-api-card select.regular-text,
 .universal-openai-connector-card select.regular-text {
 	border: 1px solid #8c8f94;
 	border-radius: 4px;

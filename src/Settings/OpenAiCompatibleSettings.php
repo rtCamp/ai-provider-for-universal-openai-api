@@ -3,12 +3,12 @@
  * Settings for OpenAI-compatible provider.
  *
  * @since 1.0.0
- * @package rtCamp\UniversalOpenAiConnector
+ * @package rtCamp\AIProviderUniversalOpenAI
  */
 
 declare( strict_types=1 );
 
-namespace rtCamp\UniversalOpenAiConnector\Settings;
+namespace rtCamp\AIProviderUniversalOpenAI\Settings;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -22,12 +22,12 @@ use WordPress\AiClient\Providers\Http\DTO\ApiKeyRequestAuthentication;
  */
 class OpenAiCompatibleSettings {
 
-	private const OPTION_GROUP        = 'universal-openai-connector-settings';
-	private const OPTION_NAME         = 'universal_openai_connector_settings';
-	private const PAGE_SLUG           = 'universal-openai-connector';
-	private const SECTION_ID          = 'universal_openai_connector_main';
-	private const AJAX_ACTION_MODELS  = 'universal_openai_connector_models';
-	private const NONCE_ACTION        = 'universal_openai_connector_nonce';
+	private const OPTION_GROUP        = 'ai-provider-for-universal-openai-api-settings';
+	private const OPTION_NAME         = 'ai_provider_for_universal_openai_api_settings';
+	private const PAGE_SLUG           = 'ai-provider-for-universal-openai-api';
+	private const SECTION_ID          = 'ai_provider_for_universal_openai_api_main';
+	private const AJAX_ACTION_MODELS  = 'ai_provider_for_universal_openai_api_models';
+	private const NONCE_ACTION        = 'ai_provider_for_universal_openai_api_nonce';
 	private const KEY_ENDPOINT_URL    = 'endpoint_url';
 	private const KEY_TEXT_MODEL      = 'text_model';
 	private const KEY_IMAGE_MODEL     = 'image_model';
@@ -73,7 +73,7 @@ class OpenAiCompatibleSettings {
 
 		add_settings_field(
 			self::OPTION_NAME . '_endpoint_url',
-			__( 'API Endpoint URL', 'universal-openai-connector' ),
+			__( 'API Endpoint URL', 'ai-provider-for-universal-openai-api' ),
 			[ $this, 'render_endpoint_field' ],
 			self::PAGE_SLUG,
 			self::SECTION_ID,
@@ -82,7 +82,7 @@ class OpenAiCompatibleSettings {
 
 		add_settings_field(
 			self::OPTION_NAME . '_text_model',
-			__( 'Default Text Model', 'universal-openai-connector' ),
+			__( 'Default Text Model', 'ai-provider-for-universal-openai-api' ),
 			[ $this, 'render_text_model_field' ],
 			self::PAGE_SLUG,
 			self::SECTION_ID,
@@ -91,7 +91,7 @@ class OpenAiCompatibleSettings {
 
 		add_settings_field(
 			self::OPTION_NAME . '_image_model',
-			__( 'Default Image Model', 'universal-openai-connector' ),
+			__( 'Default Image Model', 'ai-provider-for-universal-openai-api' ),
 			[ $this, 'render_image_model_field' ],
 			self::PAGE_SLUG,
 			self::SECTION_ID,
@@ -106,8 +106,8 @@ class OpenAiCompatibleSettings {
 	 */
 	public function register_settings_screen(): void {
 		add_options_page(
-			__( 'Universal OpenAI Connector Settings', 'universal-openai-connector' ),
-			__( 'Universal OpenAI Connector Settings', 'universal-openai-connector' ),
+			__( 'AI Provider for Universal OpenAI API Settings', 'ai-provider-for-universal-openai-api' ),
+			__( 'AI Provider for Universal OpenAI API Settings', 'ai-provider-for-universal-openai-api' ),
 			'manage_options',
 			self::PAGE_SLUG,
 			[ $this, 'render_screen' ]
@@ -199,19 +199,19 @@ class OpenAiCompatibleSettings {
 			return;
 		}
 		?>
-		<div class="wrap universal-openai-connector-settings-wrap">
+		<div class="wrap ai-provider-for-universal-openai-api-settings-wrap universal-openai-connector-settings-wrap">
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
-			<p><?php esc_html_e( 'Configure an OpenAI-compatible endpoint and choose default models used for text and image generation.', 'universal-openai-connector' ); ?></p>
+			<p><?php esc_html_e( 'Configure an OpenAI-compatible endpoint and choose default models used for text and image generation.', 'ai-provider-for-universal-openai-api' ); ?></p>
 
-			<div class="universal-openai-connector-info-banner">
-				<span class="universal-openai-connector-banner-icon" aria-hidden="true">
-					<img src="<?php echo esc_url( UNIVERSAL_OPENAI_CONNECTOR_PLUGIN_URL . 'assets/images/info.svg' ); ?>" width="18" height="18" alt="" />
+			<div class="ai-provider-for-universal-openai-api-info-banner universal-openai-connector-info-banner">
+				<span class="ai-provider-for-universal-openai-api-banner-icon universal-openai-connector-banner-icon" aria-hidden="true">
+					<img src="<?php echo esc_url( AI_PROVIDER_FOR_UNIVERSAL_OPENAI_API_PLUGIN_URL . 'assets/images/info.svg' ); ?>" width="18" height="18" alt="" />
 				</span>
 				<p>
 					<?php
 					printf(
 						/* translators: 1: opening anchor tag, 2: closing anchor tag */
-						esc_html__( 'Set your API key under %1$sSettings > Connectors%2$s for the Universal OpenAI Connector provider.', 'universal-openai-connector' ),
+						esc_html__( 'Set your API key under %1$sSettings > Connectors%2$s for the AI Provider for Universal OpenAI API provider.', 'ai-provider-for-universal-openai-api' ),
 						'<a href="' . esc_url( admin_url( 'options-connectors.php' ) ) . '">',
 						'</a>'
 					);
@@ -219,7 +219,7 @@ class OpenAiCompatibleSettings {
 				</p>
 			</div>
 
-			<form action="options.php" method="post" class="universal-openai-connector-card">
+			<form action="options.php" method="post" class="ai-provider-for-universal-openai-api-card universal-openai-connector-card">
 				<?php
 				settings_fields( self::OPTION_GROUP );
 				do_settings_sections( self::PAGE_SLUG );
@@ -239,21 +239,24 @@ class OpenAiCompatibleSettings {
 	 */
 	private static function get_preset_endpoints(): array {
 		$raw = apply_filters(
-			'universal_openai_connector_endpoints',
-			[
-				'OpenAI'       => 'https://api.openai.com/v1',
-				'Mistral AI'   => 'https://api.mistral.ai/v1',
-				'Together AI'  => 'https://api.together.xyz/v1',
-				'Groq'         => 'https://api.groq.com/openai/v1',
-				'Fireworks AI' => 'https://api.fireworks.ai/inference/v1',
-				'Xiaomi AI'    => 'https://api.ai.xiaomi.com/v1',
-				'NVIDIA NIM'   => 'https://integrate.api.nvidia.com/v1',
-				'OpenRouter'   => 'https://openrouter.ai/api/v1',
-				'Google'       => 'https://generativelanguage.googleapis.com/v1beta/openai',
-				'Anthropic'    => 'https://api.anthropic.com/v1',
-				'DeepSeek'     => 'https://api.deepseek.com/v1',
-				'Perplexity'   => 'https://api.perplexity.ai',
-			]
+			'ai_provider_for_universal_openai_api_endpoints',
+			apply_filters(
+				'universal_openai_connector_endpoints',
+				[
+					'OpenAI'       => 'https://api.openai.com/v1',
+					'Mistral AI'   => 'https://api.mistral.ai/v1',
+					'Together AI'  => 'https://api.together.xyz/v1',
+					'Groq'         => 'https://api.groq.com/openai/v1',
+					'Fireworks AI' => 'https://api.fireworks.ai/inference/v1',
+					'Xiaomi AI'    => 'https://api.ai.xiaomi.com/v1',
+					'NVIDIA NIM'   => 'https://integrate.api.nvidia.com/v1',
+					'OpenRouter'   => 'https://openrouter.ai/api/v1',
+					'Google'       => 'https://generativelanguage.googleapis.com/v1beta/openai',
+					'Anthropic'    => 'https://api.anthropic.com/v1',
+					'DeepSeek'     => 'https://api.deepseek.com/v1',
+					'Perplexity'   => 'https://api.perplexity.ai',
+				]
+			)
 		);
 
 		// Guard against a filter returning a non-array.
@@ -302,7 +305,7 @@ class OpenAiCompatibleSettings {
 		>
 			<div class="openai-compatible-endpoint-search-container">
 				<span class="openai-compatible-endpoint-search-icon" aria-hidden="true">
-					<img src="<?php echo esc_url( UNIVERSAL_OPENAI_CONNECTOR_PLUGIN_URL . 'assets/images/search.svg' ); ?>" width="14" height="14" alt="" />
+					<img src="<?php echo esc_url( AI_PROVIDER_FOR_UNIVERSAL_OPENAI_API_PLUGIN_URL . 'assets/images/search.svg' ); ?>" width="14" height="14" alt="" />
 				</span>
 				<input
 					type="text"
@@ -316,23 +319,23 @@ class OpenAiCompatibleSettings {
 					aria-autocomplete="list"
 					aria-controls="<?php echo esc_attr( $id ); ?>-listbox"
 					value="<?php echo esc_attr( $value ); ?>"
-					placeholder="<?php esc_attr_e( 'Search or enter custom URL', 'universal-openai-connector' ); ?>"
+					placeholder="<?php esc_attr_e( 'Search or enter custom URL', 'ai-provider-for-universal-openai-api' ); ?>"
 					class="openai-compatible-endpoint-search-input"
 				/>
 				<button
 					type="button"
 					id="openai-compatible-endpoint-toggle"
-					aria-label="<?php esc_attr_e( 'Toggle provider list', 'universal-openai-connector' ); ?>"
+					aria-label="<?php esc_attr_e( 'Toggle provider list', 'ai-provider-for-universal-openai-api' ); ?>"
 					aria-expanded="false"
 					aria-controls="<?php echo esc_attr( $id ); ?>-listbox"
 				>
-					<img src="<?php echo esc_url( UNIVERSAL_OPENAI_CONNECTOR_PLUGIN_URL . 'assets/images/chevron-down.svg' ); ?>" width="14" height="14" alt="" aria-hidden="true" />
+					<img src="<?php echo esc_url( AI_PROVIDER_FOR_UNIVERSAL_OPENAI_API_PLUGIN_URL . 'assets/images/chevron-down.svg' ); ?>" width="14" height="14" alt="" aria-hidden="true" />
 				</button>
 			</div>
 			<ul
 				role="listbox"
 				id="<?php echo esc_attr( $id ); ?>-listbox"
-				aria-label="<?php esc_attr_e( 'Provider suggestions', 'universal-openai-connector' ); ?>"
+				aria-label="<?php esc_attr_e( 'Provider suggestions', 'ai-provider-for-universal-openai-api' ); ?>"
 				class="openai-compatible-endpoint-presets-list"
 			></ul>
 		</div>
@@ -342,7 +345,7 @@ class OpenAiCompatibleSettings {
 			value="<?php echo esc_attr( $value ); ?>"
 		/>
 		<p class="description openai-compatible-endpoint-description">
-			<?php esc_html_e( 'Search a preset provider or type a custom base URL for your OpenAI-compatible API.', 'universal-openai-connector' ); ?>
+			<?php esc_html_e( 'Search a preset provider or type a custom base URL for your OpenAI-compatible API.', 'ai-provider-for-universal-openai-api' ); ?>
 		</p>
 		<?php
 	}
@@ -365,7 +368,7 @@ class OpenAiCompatibleSettings {
 			<span id="openai-compatible-text-model-status" class="openai-compatible-model-status"></span>
 		</div>
 		<p class="description">
-			<?php esc_html_e( 'Optional override. Leave as "Use AI Client default" to let WordPress AI Client choose.', 'universal-openai-connector' ); ?>
+			<?php esc_html_e( 'Optional override. Leave as "Use AI Client default" to let WordPress AI Client choose.', 'ai-provider-for-universal-openai-api' ); ?>
 		</p>
 		<?php
 	}
@@ -388,7 +391,7 @@ class OpenAiCompatibleSettings {
 			<span id="openai-compatible-image-model-status" class="openai-compatible-model-status"></span>
 		</div>
 		<p class="description">
-			<?php esc_html_e( 'Optional override. Leave as "Use AI Client default" to let WordPress AI Client choose.', 'universal-openai-connector' ); ?>
+			<?php esc_html_e( 'Optional override. Leave as "Use AI Client default" to let WordPress AI Client choose.', 'ai-provider-for-universal-openai-api' ); ?>
 		</p>
 		<?php
 	}
@@ -405,51 +408,58 @@ class OpenAiCompatibleSettings {
 			return;
 		}
 
-		$plugin_dir = UNIVERSAL_OPENAI_CONNECTOR_PLUGIN_DIR;
+		$plugin_dir = AI_PROVIDER_FOR_UNIVERSAL_OPENAI_API_PLUGIN_DIR;
 		$asset_file = $plugin_dir . 'build/admin/settings.asset.php';
 		$asset      = file_exists( $asset_file ) ? require $asset_file : []; // phpcs:ignore WordPressVIPMinimum.Files.IncludingFile.UsingVariable -- Asset file path is built from a known constant.
 
 		$dependencies = isset( $asset['dependencies'] ) ? $asset['dependencies'] : [];
-		$version      = isset( $asset['version'] ) ? $asset['version'] : UNIVERSAL_OPENAI_CONNECTOR_VERSION;
+		$version      = isset( $asset['version'] ) ? $asset['version'] : AI_PROVIDER_FOR_UNIVERSAL_OPENAI_API_VERSION;
 
 		wp_enqueue_script(
-			'universal-openai-connector-settings',
-			plugins_url( 'build/admin/settings.js', UNIVERSAL_OPENAI_CONNECTOR_PLUGIN_FILE ),
+			'ai-provider-for-universal-openai-api-settings',
+			plugins_url( 'build/admin/settings.js', AI_PROVIDER_FOR_UNIVERSAL_OPENAI_API_PLUGIN_FILE ),
 			$dependencies,
 			$version,
 			true
 		);
 
 		wp_enqueue_style(
-			'universal-openai-connector-settings',
-			plugins_url( 'build/admin/style-settings.css', UNIVERSAL_OPENAI_CONNECTOR_PLUGIN_FILE ),
+			'ai-provider-for-universal-openai-api-settings',
+			plugins_url( 'build/admin/style-settings.css', AI_PROVIDER_FOR_UNIVERSAL_OPENAI_API_PLUGIN_FILE ),
 			[],
 			$version
 		);
-		wp_style_add_data( 'universal-openai-connector-settings', 'rtl', 'replace' );
+		wp_style_add_data( 'ai-provider-for-universal-openai-api-settings', 'rtl', 'replace' );
+
+		$settings_data = [
+			'ajaxUrl'            => esc_url_raw(
+				add_query_arg(
+					[
+						'action'   => self::AJAX_ACTION_MODELS,
+						'_wpnonce' => wp_create_nonce( self::NONCE_ACTION ),
+					],
+					admin_url( 'admin-ajax.php' )
+				)
+			),
+			'selectedTextModel'  => self::get_selected_text_model(),
+			'selectedImageModel' => self::get_selected_image_model(),
+			'i18n'               => [
+				'loading'         => __( 'Loading models…', 'ai-provider-for-universal-openai-api' ),
+				'loaded'          => __( 'models loaded.', 'ai-provider-for-universal-openai-api' ),
+				'errorLoad'       => __( 'Could not load models from endpoint.', 'ai-provider-for-universal-openai-api' ),
+				'aiClientDefault' => __( 'Use AI Client default', 'ai-provider-for-universal-openai-api' ),
+			],
+		];
 
 		wp_localize_script(
-			'universal-openai-connector-settings',
+			'ai-provider-for-universal-openai-api-settings',
+			'aiProviderForUniversalOpenAiApiSettings',
+			$settings_data
+		);
+		wp_localize_script(
+			'ai-provider-for-universal-openai-api-settings',
 			'universalOpenAiConnectorSettings',
-			[
-				'ajaxUrl'            => esc_url_raw(
-					add_query_arg(
-						[
-							'action'   => self::AJAX_ACTION_MODELS,
-							'_wpnonce' => wp_create_nonce( self::NONCE_ACTION ),
-						],
-						admin_url( 'admin-ajax.php' )
-					)
-				),
-				'selectedTextModel'  => self::get_selected_text_model(),
-				'selectedImageModel' => self::get_selected_image_model(),
-				'i18n'               => [
-					'loading'         => __( 'Loading models…', 'universal-openai-connector' ),
-					'loaded'          => __( 'models loaded.', 'universal-openai-connector' ),
-					'errorLoad'       => __( 'Could not load models from endpoint.', 'universal-openai-connector' ),
-					'aiClientDefault' => __( 'Use AI Client default', 'universal-openai-connector' ),
-				],
-			]
+			$settings_data
 		);
 	}
 
@@ -462,7 +472,7 @@ class OpenAiCompatibleSettings {
 		check_ajax_referer( self::NONCE_ACTION );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'universal-openai-connector' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'ai-provider-for-universal-openai-api' ), 403 );
 		}
 
 		// Accept an optional endpoint URL POSTed by the settings page so models can be
@@ -506,7 +516,7 @@ class OpenAiCompatibleSettings {
 			wp_send_json_error(
 				sprintf(
 					/* translators: %s: Error message. */
-					__( 'Could not fetch models. Error: %s', 'universal-openai-connector' ),
+					__( 'Could not fetch models. Error: %s', 'ai-provider-for-universal-openai-api' ),
 					$response->get_error_message()
 				),
 				500
@@ -517,7 +527,7 @@ class OpenAiCompatibleSettings {
 		$data = json_decode( $body, true );
 
 		if ( ! is_array( $data ) ) {
-			wp_send_json_error( __( 'Unexpected /models response format. Expected JSON object.', 'universal-openai-connector' ), 500 );
+			wp_send_json_error( __( 'Unexpected /models response format. Expected JSON object.', 'ai-provider-for-universal-openai-api' ), 500 );
 		}
 
 		$raw_models = [];
@@ -528,7 +538,7 @@ class OpenAiCompatibleSettings {
 		}
 
 		if ( [] === $raw_models ) {
-			wp_send_json_error( __( 'Unexpected /models response format. Expected JSON with a models or data array.', 'universal-openai-connector' ), 500 );
+			wp_send_json_error( __( 'Unexpected /models response format. Expected JSON with a models or data array.', 'ai-provider-for-universal-openai-api' ), 500 );
 		}
 
 		$models = array_values(
@@ -672,6 +682,7 @@ class OpenAiCompatibleSettings {
 	 */
 	private static function get_models_url( string $endpoint ): string {
 		$models_url = $endpoint . '/models';
+		$models_url = apply_filters( 'ai_provider_for_universal_openai_api_models_url', $models_url, $endpoint );
 		return apply_filters( 'universal_openai_connector_models_url', $models_url, $endpoint );
 	}
 
@@ -683,8 +694,17 @@ class OpenAiCompatibleSettings {
 	 * @return array<string, string>
 	 */
 	public static function get_settings(): array {
-		$settings = (array) get_option( self::OPTION_NAME, [] );
-		return array_merge( self::get_default_settings(), $settings );
+		$settings = get_option( self::OPTION_NAME, null );
+		if ( null === $settings ) {
+			$settings = get_option( 'ai_provider_for_universal_openai_api', null );
+			if ( null === $settings ) {
+				$settings = get_option( 'universal_openai_connector_settings', null );
+				if ( null === $settings ) {
+					$settings = get_option( 'universal_openai_connector', [] );
+				}
+			}
+		}
+		return array_merge( self::get_default_settings(), (array) $settings );
 	}
 
 	/**
