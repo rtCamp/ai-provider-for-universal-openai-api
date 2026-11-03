@@ -129,29 +129,7 @@ class OpenAiCompatibleSettings {
 			return '';
 		}
 
-		// For localhost and custom ports, use a more permissive approach.
-		// First check if it's a localhost URL.
-		if ( strpos( $url, 'localhost' ) !== false || strpos( $url, '127.0.0.1' ) !== false ) {
-			// Basic validation for localhost URLs.
-			if ( ! preg_match( '/^https?:\/\/.+/', $url ) ) {
-				return '';
-			}
-			// Return the URL as-is (already trimmed).
-			return $url;
-		}
-
-		// For non-localhost URLs, use WordPress's stricter validation.
-		$escaped = esc_url_raw( $url );
-		if ( '' === $escaped ) {
-			// If esc_url_raw rejects it but it looks like a valid URL, try to sanitize it differently.
-			// This handles edge cases where esc_url_raw might be too strict.
-			if ( preg_match( '/^https?:\/\/.+/', $url ) ) {
-				return $url;
-			}
-			return '';
-		}
-
-		return $escaped;
+		return esc_url_raw( $url, [ 'http', 'https' ] );
 	}
 
 	/**
@@ -497,15 +475,20 @@ class OpenAiCompatibleSettings {
 		}
 
 		$models_url = self::get_models_url( $endpoint );
-		$headers    = [
+
+		if ( ! wp_http_validate_url( $models_url ) ) {
+			wp_send_json_error( __( 'Invalid or disallowed endpoint URL.', 'ai-provider-for-universal-openai-api' ), 400 );
+		}
+
+		$headers = [
 			'Accept' => 'application/json',
 		];
-		if ( '' !== $api_key ) {
+		// Only attach the stored API key if fetching from the configured endpoint, preventing token leakage.
+		if ( '' !== $api_key && self::get_endpoint_url() === $endpoint ) {
 			$headers['Authorization'] = 'Bearer ' . $api_key;
 		}
 
-		// phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.wp_remote_get_wp_remote_get -- External request to configured provider endpoint.
-		$response = wp_remote_get(
+		$response = wp_safe_remote_get(
 			$models_url,
 			[
 				'headers' => $headers,
@@ -665,7 +648,8 @@ class OpenAiCompatibleSettings {
 	 */
 	public static function get_endpoint_url(): string {
 		$settings = self::get_settings();
-		$url      = (string) $settings[ self::KEY_ENDPOINT_URL ];
+		$url      = isset( $settings[ self::KEY_ENDPOINT_URL ] ) ? (string) $settings[ self::KEY_ENDPOINT_URL ] : '';
+		$url      = self::sanitize_endpoint_url( $url );
 		if ( '' === trim( $url ) ) {
 			return self::DEFAULT_ENDPOINT;
 		}
@@ -770,15 +754,19 @@ class OpenAiCompatibleSettings {
 		}
 
 		$models_url = self::get_models_url( $endpoint );
-		$headers    = [
+
+		if ( ! wp_http_validate_url( $models_url ) ) {
+			return [];
+		}
+
+		$headers = [
 			'Accept' => 'application/json',
 		];
 		if ( '' !== $api_key ) {
 			$headers['Authorization'] = 'Bearer ' . $api_key;
 		}
 
-		// phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.wp_remote_get_wp_remote_get -- External request to configured provider endpoint.
-		$response = wp_remote_get(
+		$response = wp_safe_remote_get(
 			$models_url,
 			[
 				'headers' => $headers,
