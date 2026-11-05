@@ -983,6 +983,7 @@ class OpenAiCompatibleSettings {
 			'speech-',
 			'-speech',
 			'audio-speech',
+			'phonon',
 		];
 		foreach ( $keywords as $keyword ) {
 			if ( str_contains( $lower, $keyword ) ) {
