@@ -48,7 +48,7 @@ class OpenAiCompatibleSettings {
 		add_action( 'admin_menu', [ $this, 'register_settings_screen' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_settings_script' ] );
 		add_action( 'wp_ajax_' . self::AJAX_ACTION_MODELS, [ $this, 'ajax_list_models' ] );
-		add_filter( 'ai_provider_for_universal_openai_api_models_url', array( $this, 'custom_ai_endpoint_models_url' ), 10, 2 );
+		add_filter( 'ai_provider_for_universal_openai_api_models_url', [ $this, 'custom_ai_endpoint_models_url' ], 10, 2 );
 	}
 
 	/**
@@ -1004,7 +1004,7 @@ class OpenAiCompatibleSettings {
 	 * @param string $endpoint   The user-configured base endpoint URL.
 	 * @return string The filtered models URL.
 	 */
-	function custom_ai_endpoint_models_url( $models_url, $endpoint ) {
+	public function custom_ai_endpoint_models_url( $models_url, $endpoint ) {
 		if ( false !== strpos( $endpoint, 'openrouter.ai' ) || false !== strpos( $models_url, 'openrouter.ai' ) ) {
 			return add_query_arg( 'output_modalities', 'text,image,speech', $models_url );
 		}
