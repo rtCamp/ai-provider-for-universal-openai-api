@@ -32,12 +32,10 @@ class OpenAiCompatibleSettings {
 	private const KEY_TEXT_MODEL       = 'text_model';
 	private const KEY_IMAGE_MODEL      = 'image_model';
 	private const KEY_SPEECH_MODEL     = 'speech_model';
-	private const KEY_SPEECH_VOICE     = 'speech_voice';
 	private const DEFAULT_ENDPOINT     = 'https://api.openai.com/v1';
 	private const DEFAULT_TEXT_MODEL   = '';
 	private const DEFAULT_IMAGE_MODEL  = '';
 	private const DEFAULT_SPEECH_MODEL = '';
-	private const DEFAULT_SPEECH_VOICE = '';
 	private const MODELS_CACHE_TTL     = HOUR_IN_SECONDS;
 
 	/**
@@ -110,15 +108,6 @@ class OpenAiCompatibleSettings {
 			self::SECTION_ID,
 			[ 'label_for' => self::OPTION_NAME . '-speech-model' ]
 		);
-
-		add_settings_field(
-			self::OPTION_NAME . '_speech_voice',
-			__( 'Default Speech Voice', 'ai-provider-for-universal-openai-api' ),
-			[ $this, 'render_speech_voice_field' ],
-			self::PAGE_SLUG,
-			self::SECTION_ID,
-			[ 'label_for' => self::OPTION_NAME . '-speech-voice' ]
-		);
 	}
 
 	/**
@@ -129,7 +118,7 @@ class OpenAiCompatibleSettings {
 	public function register_settings_screen(): void {
 		add_options_page(
 			__( 'AI Provider for Universal OpenAI API Settings', 'ai-provider-for-universal-openai-api' ),
-			__( 'AI Provider for Universal OpenAI API Settings', 'ai-provider-for-universal-openai-api' ),
+			__( 'Universal OpenAI API', 'ai-provider-for-universal-openai-api' ),
 			'manage_options',
 			self::PAGE_SLUG,
 			[ $this, 'render_screen' ]
@@ -184,16 +173,12 @@ class OpenAiCompatibleSettings {
 		$speech_model = isset( $value[ self::KEY_SPEECH_MODEL ] )
 			? sanitize_text_field( trim( (string) $value[ self::KEY_SPEECH_MODEL ] ) )
 			: self::DEFAULT_SPEECH_MODEL;
-		$speech_voice = isset( $value[ self::KEY_SPEECH_VOICE ] )
-			? sanitize_text_field( trim( (string) $value[ self::KEY_SPEECH_VOICE ] ) )
-			: self::DEFAULT_SPEECH_VOICE;
 
 		return [
 			self::KEY_ENDPOINT_URL => $endpoint_url,
 			self::KEY_TEXT_MODEL   => $text_model,
 			self::KEY_IMAGE_MODEL  => $image_model,
 			self::KEY_SPEECH_MODEL => $speech_model,
-			self::KEY_SPEECH_VOICE => $speech_voice,
 		];
 	}
 
@@ -428,39 +413,6 @@ class OpenAiCompatibleSettings {
 	}
 
 	/**
-	 * Renders speech voice dropdown.
-	 *
-	 * Displays available voices with the API default (alloy) pre-selected,
-	 * while giving the user full freedom to select any desired voice preset.
-	 *
-	 * @since 1.2.0
-	 */
-	public function render_speech_voice_field(): void {
-		$settings = self::get_settings();
-		$value    = (string) ( $settings[ self::KEY_SPEECH_VOICE ] ?? '' );
-		$id       = self::OPTION_NAME . '-speech-voice';
-		$name     = self::OPTION_NAME . '[' . self::KEY_SPEECH_VOICE . ']';
-		$voices   = self::get_supported_voices();
-		?>
-		<div class="openai-compatible-model-select-wrapper">
-			<select id="<?php echo esc_attr( $id ); ?>" name="<?php echo esc_attr( $name ); ?>" class="regular-text">
-				<option value="" <?php selected( $value, '' ); ?>>
-					<?php esc_html_e( 'Use API default (alloy)', 'ai-provider-for-universal-openai-api' ); ?>
-				</option>
-				<?php foreach ( $voices as $voice_id => $voice_label ) : ?>
-					<option value="<?php echo esc_attr( $voice_id ); ?>" <?php selected( $value, $voice_id ); ?>>
-						<?php echo esc_html( $voice_label ); ?>
-					</option>
-				<?php endforeach; ?>
-			</select>
-		</div>
-		<p class="description">
-			<?php esc_html_e( 'Choose the default voice used for text-to-speech synthesis.', 'ai-provider-for-universal-openai-api' ); ?>
-		</p>
-		<?php
-	}
-
-	/**
 	 * Enqueues settings page JavaScript.
 	 *
 	 * @since 1.0.0
@@ -508,7 +460,6 @@ class OpenAiCompatibleSettings {
 			'selectedTextModel'   => self::get_selected_text_model(),
 			'selectedImageModel'  => self::get_selected_image_model(),
 			'selectedSpeechModel' => self::get_selected_speech_model(),
-			'selectedSpeechVoice' => self::get_selected_speech_voice(),
 			'i18n'                => [
 				'loading'         => __( 'Loading models…', 'ai-provider-for-universal-openai-api' ),
 				'loaded'          => __( 'models loaded.', 'ai-provider-for-universal-openai-api' ),
@@ -765,49 +716,6 @@ class OpenAiCompatibleSettings {
 	}
 
 	/**
-	 * Returns selected speech voice.
-	 *
-	 * @since 1.2.0
-	 */
-	public static function get_selected_speech_voice(): string {
-		$settings = self::get_settings();
-		return trim( (string) ( $settings[ self::KEY_SPEECH_VOICE ] ?? '' ) );
-	}
-
-	/**
-	 * Returns supported voices for text-to-speech synthesis.
-	 *
-	 * Defaults to OpenAI's standard voice roster. Developers can customize
-	 * this list for custom backends using the filter.
-	 *
-	 * @since 1.2.0
-	 *
-	 * @return array<string, string> Voice identifier => Voice label.
-	 */
-	public static function get_supported_voices(): array {
-		$voices = [
-			'alloy'   => 'Alloy',
-			'ash'     => 'Ash',
-			'coral'   => 'Coral',
-			'echo'    => 'Echo',
-			'fable'   => 'Fable',
-			'onyx'    => 'Onyx',
-			'nova'    => 'Nova',
-			'sage'    => 'Sage',
-			'shimmer' => 'Shimmer',
-		];
-
-		/**
-		 * Filters the supported text-to-speech voices.
-		 *
-		 * @since 1.2.0
-		 *
-		 * @param array<string, string> $voices Array of voice key => label.
-		 */
-		return (array) apply_filters( 'ai_provider_for_universal_openai_api_tts_voices', $voices );
-	}
-
-	/**
 	 * Returns endpoint URL.
 	 *
 	 * @since 1.0.0
@@ -870,7 +778,6 @@ class OpenAiCompatibleSettings {
 			self::KEY_TEXT_MODEL   => self::DEFAULT_TEXT_MODEL,
 			self::KEY_IMAGE_MODEL  => self::DEFAULT_IMAGE_MODEL,
 			self::KEY_SPEECH_MODEL => self::DEFAULT_SPEECH_MODEL,
-			self::KEY_SPEECH_VOICE => self::DEFAULT_SPEECH_VOICE,
 		];
 	}
 

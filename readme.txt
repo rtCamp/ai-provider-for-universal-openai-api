@@ -17,7 +17,7 @@ This plugin provides an [OpenAI-compatible](https://platform.openai.com/docs/api
 **Features:**
 
 * OpenAI-compatible provider registration for WordPress AI Client.
-* Configure the API endpoint URL, default text model, default image model, default speech model, and default voice from a single settings page (*Settings > AI Provider for Universal OpenAI API*).
+* Configure the API endpoint URL, default text model, default image model, and default speech model from a single settings page (*Settings > AI Provider for Universal OpenAI API*).
 * API key managed through *Settings > Connectors* — no custom credential UI needed.
 * Automatic model discovery via the `/models` endpoint of the configured API (results cached for one hour).
 * Localhost and private-network endpoints fully supported for local AI servers.
@@ -44,8 +44,8 @@ This plugin provides an [OpenAI-compatible](https://platform.openai.com/docs/api
 * Speech synthesis using the `/v1/audio/speech` endpoint.
 * Compatible with standard models (`tts-1`, `tts-1-hd`, `gpt-4o-mini-tts`) and third-party speech endpoints.
 * Output formats: MP3 (`audio/mpeg`), Opus (`audio/ogg`), WAV (`audio/wav`), FLAC (`audio/flac`), AAC (`audio/aac`).
-* Voice roster: Alloy, Ash, Coral, Echo, Fable, Onyx, Nova, Sage, Shimmer with customizable default selection.
-* Developer filters: `openai_compatible_tts_params` and `ai_provider_for_universal_openai_api_tts_voices`.
+* Default voice: `alloy` (customizable via request options in AI Client).
+* Developer filter: `openai_compatible_tts_params`.
 
 == Installation ==
 

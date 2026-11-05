@@ -206,29 +206,19 @@ class OpenAiCompatibleTextToSpeechConversionModel extends AbstractApiBasedModel 
 	/**
 	 * Resolves which voice identifier to use for the speech synthesis.
 	 *
-	 * Checks in order:
-	 * 1. Voice explicitly specified on the current request config.
-	 * 2. Default voice saved in plugin settings by the user.
-	 * 3. Fallback default voice ('alloy') provided by the API.
+	 * Uses the voice explicitly configured on the current request, or falls
+	 * back to the standard API default ('alloy').
 	 *
 	 * @since 1.2.0
 	 *
-	 * @return string The voice name (e.g. alloy, ash, echo, etc.).
+	 * @return string The voice name.
 	 */
 	protected function prepareVoice(): string {
-		// First preference: voice specified in runtime request configuration.
 		$voice = $this->getConfig()->getOutputSpeechVoice();
 		if ( null !== $voice && '' !== $voice ) {
 			return $voice;
 		}
 
-		// Second preference: default voice configured in the plugin settings screen.
-		$configured_voice = OpenAiCompatibleSettings::get_selected_speech_voice();
-		if ( '' !== $configured_voice ) {
-			return $configured_voice;
-		}
-
-		// Fallback to standard OpenAI API default voice.
 		return self::DEFAULT_VOICE;
 	}
 

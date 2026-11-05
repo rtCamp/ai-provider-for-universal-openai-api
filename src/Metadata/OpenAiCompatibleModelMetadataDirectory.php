@@ -204,8 +204,6 @@ class OpenAiCompatibleModelMetadataDirectory extends AbstractApiBasedModelMetada
 	 * @return \WordPress\AiClient\Providers\Models\DTO\ModelMetadata The configured model metadata.
 	 */
 	private function createTtsModelMetadata( string $model_id ): ModelMetadata {
-		$supported_voices = array_keys( OpenAiCompatibleSettings::get_supported_voices() );
-
 		return new ModelMetadata(
 			$model_id,
 			$model_id,
@@ -227,7 +225,7 @@ class OpenAiCompatibleModelMetadataDirectory extends AbstractApiBasedModelMetada
 					]
 				),
 				new SupportedOption( OptionEnum::outputFileType(), [ FileTypeEnum::inline() ] ),
-				new SupportedOption( OptionEnum::outputSpeechVoice(), $supported_voices ),
+				new SupportedOption( OptionEnum::outputSpeechVoice() ),
 				new SupportedOption( OptionEnum::customOptions() ),
 			]
 		);

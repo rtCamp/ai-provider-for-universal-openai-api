@@ -13,7 +13,6 @@ interface AiProviderForUniversalOpenAiApiSettingsGlobal {
 	selectedTextModel?: string;
 	selectedImageModel?: string;
 	selectedSpeechModel?: string;
-	selectedSpeechVoice?: string;
 	i18n?: {
 		loading?: string;
 		loaded?: string;
