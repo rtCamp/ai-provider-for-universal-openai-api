@@ -17,7 +17,8 @@ AI Provider for Universal OpenAI API registers an `openai_compatible` provider w
 * **Connect to any OpenAI-compatible endpoint** — official OpenAI, self-hosted, or third-party
 * **Generate text** using any LLM accessible through the configured endpoint
 * **Generate images** using models that support image generation
-* **Configure default models** for text and image generation from WordPress admin settings
+* **Synthesize speech** using models that support text-to-speech conversion
+* **Configure default models** for text, image, and speech generation from WordPress admin settings
 * **Discover available models** automatically from your configured endpoint
 * **Switch endpoints and models** without changing any code — just update your admin settings
 
@@ -51,6 +52,7 @@ The plugin communicates using the standard OpenAI REST API format:
 | `GET /v1/models` | Populate the model dropdowns in settings |
 | `POST /v1/chat/completions` | Text generation requests |
 | `POST /v1/images/generations` | Image generation requests |
+| `POST /v1/audio/speech` | Text-to-speech audio synthesis requests |
 
 ### Supported endpoints (examples)
 

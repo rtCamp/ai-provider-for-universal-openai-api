@@ -1,6 +1,6 @@
 === AI Provider for Universal OpenAI API ===
 Contributors:      rtcamp, milindmore22, vishal4669, aishwarryapande, aviralmittal89
-Tags:              ai, openai, llm, text-generation, image-generation
+Tags:              ai, openai, llm, text-generation, image-generation, text-to-speech, speech-synthesis
 Requires at least: 7.0
 Tested up to:      7.0
 Stable tag:        1.1.0
@@ -8,22 +8,22 @@ Requires PHP:      7.4
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
-OpenAI-compatible provider for the WordPress AI Client with a configurable endpoint and default text/image models.
+OpenAI-compatible provider for the WordPress AI Client with a configurable endpoint and default text, image, and text-to-speech models.
 
 == Description ==
 
-This plugin provides an [OpenAI-compatible](https://platform.openai.com/docs/api-reference) integration for the [WordPress AI Client](https://wordpress.org/plugins/ai/). Point it at the official OpenAI API, a self-hosted Ollama instance, LM Studio, LocalAI, Mistral AI, Together AI, Groq, Fireworks AI, or any other service that speaks the OpenAI REST API format — text generation, chat, and image generation included.
+This plugin provides an [OpenAI-compatible](https://platform.openai.com/docs/api-reference) integration for the [WordPress AI Client](https://wordpress.org/plugins/ai/). Point it at the official OpenAI API, a self-hosted Ollama instance, LM Studio, LocalAI, Mistral AI, Together AI, Groq, Fireworks AI, or any other service that speaks the OpenAI REST API format — text generation, chat, image generation, and speech synthesis included.
 
 **Features:**
 
 * OpenAI-compatible provider registration for WordPress AI Client.
-* Configure the API endpoint URL, default text model, and default image model from a single settings page (*Settings > AI Provider for Universal OpenAI API*).
+* Configure the API endpoint URL, default text model, default image model, default speech model, and default voice from a single settings page (*Settings > AI Provider for Universal OpenAI API*).
 * API key managed through *Settings > Connectors* — no custom credential UI needed.
 * Automatic model discovery via the `/models` endpoint of the configured API (results cached for one hour).
 * Localhost and private-network endpoints fully supported for local AI servers.
 * Environment-variable overrides: `OPENAI_COMPATIBLE_BASE_URL` and `OPENAI_COMPATIBLE_API_KEY`.
 * Automatically strips parameters unsupported by non-OpenAI backends (`response_format`, `n`, `quality`, `style`, `reasoning_effort`).
-* Developer filters to customise request parameters for text and image generation.
+* Developer filters to customise request parameters for text, image, and speech generation.
 * Extended timeout (300 s) for image generation to accommodate slow backends.
 
 **Text generation capabilities:**
@@ -38,6 +38,14 @@ This plugin provides an [OpenAI-compatible](https://platform.openai.com/docs/api
 * Aspect ratios: 1:1, 3:2, 2:3, 7:4, 4:7.
 * Inline or remote file delivery.
 * Custom options passthrough.
+
+**Text-to-speech capabilities:**
+
+* Speech synthesis using the `/v1/audio/speech` endpoint.
+* Compatible with standard models (`tts-1`, `tts-1-hd`, `gpt-4o-mini-tts`) and third-party speech endpoints.
+* Output formats: MP3 (`audio/mpeg`), Opus (`audio/ogg`), WAV (`audio/wav`), FLAC (`audio/flac`), AAC (`audio/aac`).
+* Voice roster: Alloy, Ash, Coral, Echo, Fable, Onyx, Nova, Sage, Shimmer with customizable default selection.
+* Developer filters: `openai_compatible_tts_params` and `ai_provider_for_universal_openai_api_tts_voices`.
 
 == Installation ==
 
