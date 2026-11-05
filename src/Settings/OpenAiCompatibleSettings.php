@@ -742,8 +742,6 @@ class OpenAiCompatibleSettings {
 	private static function get_models_url( string $endpoint ): string {
 		$models_url = $endpoint . '/models';
 		$models_url = apply_filters( 'ai_provider_for_universal_openai_api_models_url', $models_url, $endpoint );
-		error_log( var_export( $models_url, true ) );
-		error_log( '------------------------' );
 		return apply_filters( 'universal_openai_connector_models_url', $models_url, $endpoint );
 	}
 
