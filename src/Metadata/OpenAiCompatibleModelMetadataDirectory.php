@@ -50,9 +50,12 @@ class OpenAiCompatibleModelMetadataDirectory extends AbstractApiBasedModelMetada
 				continue;
 			}
 
-			$is_image = ! empty( $model['is_image'] );
+			$is_image  = ! empty( $model['is_image'] );
+			$is_speech = ! empty( $model['is_speech'] ) || OpenAiCompatibleSettings::is_likely_speech_model( $model_id );
 			if ( $is_image ) {
 				$models_map[ $model_id ] = $this->createImageModelMetadata( $model_id );
+			} elseif ( $is_speech ) {
+				$models_map[ $model_id ] = $this->createTtsModelMetadata( $model_id );
 			} else {
 				$models_map[ $model_id ] = $this->createTextModelMetadata( $model_id );
 			}
@@ -71,6 +74,13 @@ class OpenAiCompatibleModelMetadataDirectory extends AbstractApiBasedModelMetada
 				$models_map[ $image_model ] = $this->createCombinedModelMetadata( $image_model );
 			} elseif ( ! isset( $models_map[ $image_model ] ) ) {
 				$models_map[ $image_model ] = $this->createImageModelMetadata( $image_model );
+			}
+		}
+
+		$speech_model = trim( OpenAiCompatibleSettings::get_effective_speech_model() );
+		if ( '' !== $speech_model ) {
+			if ( ! isset( $models_map[ $speech_model ] ) ) {
+				$models_map[ $speech_model ] = $this->createTtsModelMetadata( $speech_model );
 			}
 		}
 
@@ -178,6 +188,46 @@ class OpenAiCompatibleModelMetadataDirectory extends AbstractApiBasedModelMetada
 				new SupportedOption( OptionEnum::customOptions() ),
 				new SupportedOption( OptionEnum::outputModalities(), [ [ ModalityEnum::text() ] ] ),
 				new SupportedOption( OptionEnum::inputModalities(), [ [ ModalityEnum::text() ], [ ModalityEnum::text(), ModalityEnum::image() ] ] ),
+			]
+		);
+	}
+
+	/**
+	 * Creates text-to-speech conversion metadata.
+	 *
+	 * Defines supported input/output modalities, MIME formats, and voice options
+	 * for synthesizing speech using OpenAI-compatible speech models.
+	 *
+	 * @since 1.2.0
+	 *
+	 * @param string $model_id Model identifier.
+	 * @return \WordPress\AiClient\Providers\Models\DTO\ModelMetadata The configured model metadata.
+	 */
+	private function createTtsModelMetadata( string $model_id ): ModelMetadata {
+		$supported_voices = array_keys( OpenAiCompatibleSettings::get_supported_voices() );
+
+		return new ModelMetadata(
+			$model_id,
+			$model_id,
+			[
+				CapabilityEnum::textToSpeechConversion(),
+			],
+			[
+				new SupportedOption( OptionEnum::inputModalities(), [ [ ModalityEnum::text() ] ] ),
+				new SupportedOption( OptionEnum::outputModalities(), [ [ ModalityEnum::audio() ] ] ),
+				new SupportedOption(
+					OptionEnum::outputMimeType(),
+					[
+						'audio/mpeg',
+						'audio/ogg',
+						'audio/wav',
+						'audio/flac',
+						'audio/aac',
+					]
+				),
+				new SupportedOption( OptionEnum::outputFileType(), [ FileTypeEnum::inline() ] ),
+				new SupportedOption( OptionEnum::outputSpeechVoice(), $supported_voices ),
+				new SupportedOption( OptionEnum::customOptions() ),
 			]
 		);
 	}
