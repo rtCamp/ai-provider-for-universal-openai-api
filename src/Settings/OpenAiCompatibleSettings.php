@@ -22,19 +22,21 @@ use WordPress\AiClient\Providers\Http\DTO\ApiKeyRequestAuthentication;
  */
 class OpenAiCompatibleSettings {
 
-	private const OPTION_GROUP        = 'ai-provider-for-universal-openai-api-settings';
-	private const OPTION_NAME         = 'ai_provider_for_universal_openai_api_settings';
-	private const PAGE_SLUG           = 'ai-provider-for-universal-openai-api';
-	private const SECTION_ID          = 'ai_provider_for_universal_openai_api_main';
-	private const AJAX_ACTION_MODELS  = 'ai_provider_for_universal_openai_api_models';
-	private const NONCE_ACTION        = 'ai_provider_for_universal_openai_api_nonce';
-	private const KEY_ENDPOINT_URL    = 'endpoint_url';
-	private const KEY_TEXT_MODEL      = 'text_model';
-	private const KEY_IMAGE_MODEL     = 'image_model';
-	private const DEFAULT_ENDPOINT    = 'https://api.openai.com/v1';
-	private const DEFAULT_TEXT_MODEL  = '';
-	private const DEFAULT_IMAGE_MODEL = '';
-	private const MODELS_CACHE_TTL    = HOUR_IN_SECONDS;
+	private const OPTION_GROUP         = 'ai-provider-for-universal-openai-api-settings';
+	private const OPTION_NAME          = 'ai_provider_for_universal_openai_api_settings';
+	private const PAGE_SLUG            = 'ai-provider-for-universal-openai-api';
+	private const SECTION_ID           = 'ai_provider_for_universal_openai_api_main';
+	private const AJAX_ACTION_MODELS   = 'ai_provider_for_universal_openai_api_models';
+	private const NONCE_ACTION         = 'ai_provider_for_universal_openai_api_nonce';
+	private const KEY_ENDPOINT_URL     = 'endpoint_url';
+	private const KEY_TEXT_MODEL       = 'text_model';
+	private const KEY_IMAGE_MODEL      = 'image_model';
+	private const KEY_SPEECH_MODEL     = 'speech_model';
+	private const DEFAULT_ENDPOINT     = 'https://api.openai.com/v1';
+	private const DEFAULT_TEXT_MODEL   = '';
+	private const DEFAULT_IMAGE_MODEL  = '';
+	private const DEFAULT_SPEECH_MODEL = '';
+	private const MODELS_CACHE_TTL     = HOUR_IN_SECONDS;
 
 	/**
 	 * Initializes settings hooks.
@@ -46,6 +48,7 @@ class OpenAiCompatibleSettings {
 		add_action( 'admin_menu', [ $this, 'register_settings_screen' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_settings_script' ] );
 		add_action( 'wp_ajax_' . self::AJAX_ACTION_MODELS, [ $this, 'ajax_list_models' ] );
+		add_filter( 'ai_provider_for_universal_openai_api_models_url', [ $this, 'custom_ai_endpoint_models_url' ], 10, 2 );
 	}
 
 	/**
@@ -97,6 +100,15 @@ class OpenAiCompatibleSettings {
 			self::SECTION_ID,
 			[ 'label_for' => self::OPTION_NAME . '-image-model' ]
 		);
+
+		add_settings_field(
+			self::OPTION_NAME . '_speech_model',
+			__( 'Default Text-to-Speech Model', 'ai-provider-for-universal-openai-api' ),
+			[ $this, 'render_speech_model_field' ],
+			self::PAGE_SLUG,
+			self::SECTION_ID,
+			[ 'label_for' => self::OPTION_NAME . '-speech-model' ]
+		);
 	}
 
 	/**
@@ -107,7 +119,7 @@ class OpenAiCompatibleSettings {
 	public function register_settings_screen(): void {
 		add_options_page(
 			__( 'AI Provider for Universal OpenAI API Settings', 'ai-provider-for-universal-openai-api' ),
-			__( 'AI Provider for Universal OpenAI API Settings', 'ai-provider-for-universal-openai-api' ),
+			__( 'Universal OpenAI API', 'ai-provider-for-universal-openai-api' ),
 			'manage_options',
 			self::PAGE_SLUG,
 			[ $this, 'render_screen' ]
@@ -153,17 +165,21 @@ class OpenAiCompatibleSettings {
 		}
 		$endpoint_url = rtrim( $endpoint_url, '/' );
 
-		$text_model  = isset( $value[ self::KEY_TEXT_MODEL ] )
+		$text_model   = isset( $value[ self::KEY_TEXT_MODEL ] )
 			? sanitize_text_field( trim( (string) $value[ self::KEY_TEXT_MODEL ] ) )
 			: self::DEFAULT_TEXT_MODEL;
-		$image_model = isset( $value[ self::KEY_IMAGE_MODEL ] )
+		$image_model  = isset( $value[ self::KEY_IMAGE_MODEL ] )
 			? sanitize_text_field( trim( (string) $value[ self::KEY_IMAGE_MODEL ] ) )
 			: self::DEFAULT_IMAGE_MODEL;
+		$speech_model = isset( $value[ self::KEY_SPEECH_MODEL ] )
+			? sanitize_text_field( trim( (string) $value[ self::KEY_SPEECH_MODEL ] ) )
+			: self::DEFAULT_SPEECH_MODEL;
 
 		return [
 			self::KEY_ENDPOINT_URL => $endpoint_url,
 			self::KEY_TEXT_MODEL   => $text_model,
 			self::KEY_IMAGE_MODEL  => $image_model,
+			self::KEY_SPEECH_MODEL => $speech_model,
 		];
 	}
 
@@ -375,6 +391,29 @@ class OpenAiCompatibleSettings {
 	}
 
 	/**
+	 * Renders speech model dropdown.
+	 *
+	 * @since 1.2.0
+	 */
+	public function render_speech_model_field(): void {
+		$settings = self::get_settings();
+		$value    = (string) ( $settings[ self::KEY_SPEECH_MODEL ] ?? '' );
+		$id       = self::OPTION_NAME . '-speech-model';
+		$name     = self::OPTION_NAME . '[' . self::KEY_SPEECH_MODEL . ']';
+		?>
+		<div class="openai-compatible-model-select-wrapper">
+			<select id="<?php echo esc_attr( $id ); ?>" name="<?php echo esc_attr( $name ); ?>" class="regular-text">
+				<option value="<?php echo esc_attr( $value ); ?>"><?php echo esc_html( $value ); ?></option>
+			</select>
+			<span id="openai-compatible-speech-model-status" class="openai-compatible-model-status"></span>
+		</div>
+		<p class="description">
+			<?php esc_html_e( 'Optional override. Leave as "Use AI Client default" to let WordPress AI Client choose.', 'ai-provider-for-universal-openai-api' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
 	 * Enqueues settings page JavaScript.
 	 *
 	 * @since 1.0.0
@@ -410,7 +449,7 @@ class OpenAiCompatibleSettings {
 		wp_style_add_data( 'ai-provider-for-universal-openai-api-settings', 'rtl', 'replace' );
 
 		$settings_data = [
-			'ajaxUrl'            => esc_url_raw(
+			'ajaxUrl'             => esc_url_raw(
 				add_query_arg(
 					[
 						'action'   => self::AJAX_ACTION_MODELS,
@@ -419,9 +458,10 @@ class OpenAiCompatibleSettings {
 					admin_url( 'admin-ajax.php' )
 				)
 			),
-			'selectedTextModel'  => self::get_selected_text_model(),
-			'selectedImageModel' => self::get_selected_image_model(),
-			'i18n'               => [
+			'selectedTextModel'   => self::get_selected_text_model(),
+			'selectedImageModel'  => self::get_selected_image_model(),
+			'selectedSpeechModel' => self::get_selected_speech_model(),
+			'i18n'                => [
 				'loading'         => __( 'Loading models…', 'ai-provider-for-universal-openai-api' ),
 				'loaded'          => __( 'models loaded.', 'ai-provider-for-universal-openai-api' ),
 				'errorLoad'       => __( 'Could not load models from endpoint.', 'ai-provider-for-universal-openai-api' ),
@@ -558,9 +598,10 @@ class OpenAiCompatibleSettings {
 						}
 
 						return [
-							'id'       => $id,
-							'name'     => $name,
-							'is_image' => self::is_likely_image_model( $id ),
+							'id'        => $id,
+							'name'      => $name,
+							'is_image'  => self::is_likely_image_model( $id ),
+							'is_speech' => self::is_likely_speech_model( $id ),
 						];
 					},
 					$raw_models
@@ -598,7 +639,7 @@ class OpenAiCompatibleSettings {
 		}
 
 		foreach ( self::fetch_all_models() as $model ) {
-			if ( ! self::is_likely_image_model( (string) $model['id'] ) ) {
+			if ( ! self::is_likely_image_model( (string) $model['id'] ) && ! self::is_likely_speech_model( (string) $model['id'] ) ) {
 				return (string) $model['id'];
 			}
 		}
@@ -634,6 +675,40 @@ class OpenAiCompatibleSettings {
 
 		foreach ( self::fetch_all_models() as $model ) {
 			if ( self::is_likely_image_model( (string) $model['id'] ) ) {
+				return (string) $model['id'];
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Returns selected speech model.
+	 *
+	 * @since 1.2.0
+	 */
+	public static function get_selected_speech_model(): string {
+		$settings = self::get_settings();
+		return trim( (string) ( $settings[ self::KEY_SPEECH_MODEL ] ?? '' ) );
+	}
+
+	/**
+	 * Returns the effective speech model identifier.
+	 *
+	 * Returns the user-configured speech model when set. Otherwise fetches the
+	 * list of available models from the endpoint and returns the first model
+	 * that resembles a text-to-speech model, or an empty string if none is found.
+	 *
+	 * @since 1.2.0
+	 */
+	public static function get_effective_speech_model(): string {
+		$selected = self::get_selected_speech_model();
+		if ( '' !== $selected ) {
+			return $selected;
+		}
+
+		foreach ( self::fetch_all_models() as $model ) {
+			if ( self::is_likely_speech_model( (string) $model['id'] ) ) {
 				return (string) $model['id'];
 			}
 		}
@@ -703,6 +778,7 @@ class OpenAiCompatibleSettings {
 			self::KEY_ENDPOINT_URL => self::DEFAULT_ENDPOINT,
 			self::KEY_TEXT_MODEL   => self::DEFAULT_TEXT_MODEL,
 			self::KEY_IMAGE_MODEL  => self::DEFAULT_IMAGE_MODEL,
+			self::KEY_SPEECH_MODEL => self::DEFAULT_SPEECH_MODEL,
 		];
 	}
 
@@ -825,9 +901,10 @@ class OpenAiCompatibleSettings {
 						}
 
 						return [
-							'id'       => $id,
-							'name'     => $name,
-							'is_image' => self::is_likely_image_model( $id ),
+							'id'        => $id,
+							'name'      => $name,
+							'is_image'  => self::is_likely_image_model( $id ),
+							'is_speech' => self::is_likely_speech_model( $id ),
 						];
 					},
 					$raw_models
@@ -884,5 +961,54 @@ class OpenAiCompatibleSettings {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Returns true if the model ID resembles a text-to-speech model.
+	 *
+	 * Uses keyword matching on the lowercased model identifier to detect
+	 * standard TTS models like tts-1, tts-1-hd, gpt-4o-mini-tts, or custom speech models.
+	 *
+	 * @since 1.2.0
+	 *
+	 * @param string $model_id The model identifier to inspect.
+	 */
+	public static function is_likely_speech_model( string $model_id ): bool {
+		$lower    = strtolower( $model_id );
+		$keywords = [
+			'tts-',
+			'-tts',
+			'/tts',
+			'tts/',
+			'text-to-speech',
+			'speech-',
+			'-speech',
+			'audio-speech',
+			'phonon',
+		];
+		foreach ( $keywords as $keyword ) {
+			if ( str_contains( $lower, $keyword ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Filter the models list request URL for Universal OpenAI Connector.
+	 *
+	 * For GitHub Models (models.github.ai), route list request to /v1/models.
+	 * For OpenRouter (openrouter.ai), append output_modalities query parameter to fetch text, image, and speech models.
+	 *
+	 * @param string $models_url The default constructed models URL.
+	 * @param string $endpoint   The user-configured base endpoint URL.
+	 * @return string The filtered models URL.
+	 */
+	public function custom_ai_endpoint_models_url( $models_url, $endpoint ) {
+		if ( false !== strpos( $endpoint, 'openrouter.ai' ) || false !== strpos( $models_url, 'openrouter.ai' ) ) {
+			return add_query_arg( 'output_modalities', 'text,image,speech', $models_url );
+		}
+
+		return $models_url;
 	}
 }

@@ -21,6 +21,7 @@ use WordPress\AiClient\Providers\Models\DTO\ModelMetadata;
 use rtCamp\AIProviderUniversalOpenAI\Metadata\OpenAiCompatibleModelMetadataDirectory;
 use rtCamp\AIProviderUniversalOpenAI\Models\OpenAiCompatibleImageGenerationModel;
 use rtCamp\AIProviderUniversalOpenAI\Models\OpenAiCompatibleTextGenerationModel;
+use rtCamp\AIProviderUniversalOpenAI\Models\OpenAiCompatibleTextToSpeechConversionModel;
 use rtCamp\AIProviderUniversalOpenAI\Settings\OpenAiCompatibleSettings;
 
 /**
@@ -82,8 +83,15 @@ class OpenAiCompatibleProvider extends AbstractApiProvider {
 			return new OpenAiCompatibleImageGenerationModel( $model_metadata, $provider_metadata );
 		}
 
+		if ( in_array( 'text_to_speech_conversion', $capabilities_string_list, true ) ) {
+			return new OpenAiCompatibleTextToSpeechConversionModel( $model_metadata, $provider_metadata );
+		}
+
 		$capabilities = $model_metadata->getSupportedCapabilities();
 		foreach ( $capabilities as $capability ) {
+			if ( $capability->isTextToSpeechConversion() ) {
+				return new OpenAiCompatibleTextToSpeechConversionModel( $model_metadata, $provider_metadata );
+			}
 			if ( $capability->isTextGeneration() ) {
 				return new OpenAiCompatibleTextGenerationModel( $model_metadata, $provider_metadata );
 			}
@@ -103,7 +111,7 @@ class OpenAiCompatibleProvider extends AbstractApiProvider {
 			ProviderTypeEnum::cloud(),
 			'',
 			RequestAuthenticationMethod::apiKey(),
-			__( 'Access any AI service supporting the OpenAI API for text and image creation.', 'ai-provider-for-universal-openai-api' ),
+			__( 'Access any AI service supporting the OpenAI API for text, image, and speech generation.', 'ai-provider-for-universal-openai-api' ),
 			AI_PROVIDER_FOR_UNIVERSAL_OPENAI_API_PLUGIN_DIR . 'assets/images/openai-api.svg'
 		);
 	}

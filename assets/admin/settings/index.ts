@@ -12,6 +12,7 @@ interface AiProviderForUniversalOpenAiApiSettingsGlobal {
 	ajaxUrl?: string;
 	selectedTextModel?: string;
 	selectedImageModel?: string;
+	selectedSpeechModel?: string;
 	i18n?: {
 		loading?: string;
 		loaded?: string;
@@ -31,6 +32,7 @@ interface OpenAiCompatibleModel {
 	id?: string;
 	name?: string;
 	is_image?: boolean;
+	is_speech?: boolean;
 }
 
 interface Preset {
@@ -430,6 +432,8 @@ function init(): void {
 		document.getElementById( 'universal_openai_connector_settings-text-model' ) ) as HTMLSelectElement | null;
 	const imageModelSelect = ( document.getElementById( 'ai_provider_for_universal_openai_api_settings-image-model' ) ||
 		document.getElementById( 'universal_openai_connector_settings-image-model' ) ) as HTMLSelectElement | null;
+	const speechModelSelect = ( document.getElementById( 'ai_provider_for_universal_openai_api_settings-speech-model' ) ||
+		document.getElementById( 'universal_openai_connector_settings-speech-model' ) ) as HTMLSelectElement | null;
 
 	if ( ! textModelSelect || ! imageModelSelect ) {
 		initEndpointPreset();
@@ -438,13 +442,14 @@ function init(): void {
 
 	const textStatus = document.getElementById( 'openai-compatible-text-model-status' );
 	const imageStatus = document.getElementById( 'openai-compatible-image-model-status' );
+	const speechStatus = document.getElementById( 'openai-compatible-speech-model-status' );
 	const ajaxUrl = settings.ajaxUrl || '';
 
 	// Generation counter: each new fetch increments it so stale responses are discarded.
 	let fetchGeneration = 0;
 
 	/**
-	 * Fetches the model list and refreshes both SELECT elements.
+	 * Fetches the model list and refreshes all model SELECT elements.
 	 *
 	 * @param {string|null} overrideUrl Endpoint URL override, or null to use the saved setting. Pass '' to preview the default endpoint.
 	 */
@@ -453,10 +458,14 @@ function init(): void {
 
 		setStatus( textStatus, i18n.loading || 'Loading models...', false, 'loading' );
 		setStatus( imageStatus, i18n.loading || 'Loading models...', false, 'loading' );
+		if ( speechModelSelect ) {
+			setStatus( speechStatus, i18n.loading || 'Loading models...', false, 'loading' );
+		}
 
 		// Capture current select values before the async response arrives.
 		const currentTextModel = textModelSelect.value;
 		const currentImageModel = imageModelSelect.value;
+		const currentSpeechModel = speechModelSelect ? speechModelSelect.value : '';
 
 		// POST so the optional endpoint_url body parameter reaches the AJAX handler.
 		// null means "no override"; any string (including '') is sent explicitly so PHP can
@@ -478,17 +487,24 @@ function init(): void {
 					throw new Error( i18n.errorLoad || 'Could not load models from endpoint.' );
 				}
 
-				// Filter models for text and image SELECT elements.
-				const textModels = payload.data.filter( ( model ) => model && ! model.is_image );
+				// Filter models for text, image, and speech SELECT elements.
+				const textModels = payload.data.filter( ( model ) => model && ! model.is_image && ! model.is_speech );
 				const imageModels = payload.data.filter( ( model ) => model && model.is_image );
+				const speechModels = payload.data.filter( ( model ) => model && model.is_speech );
 
 				// Populate SELECT elements, preserving the user's current selection.
 				clearAndFillSelect( textModelSelect, textModels, currentTextModel );
 				clearAndFillSelect( imageModelSelect, imageModels, currentImageModel );
+				if ( speechModelSelect ) {
+					clearAndFillSelect( speechModelSelect, speechModels, currentSpeechModel );
+				}
 
 				const loadedMsg = i18n.loaded || 'models loaded.';
 				setStatus( textStatus, `${ textModels.length } ${ loadedMsg }`, false, 'success' );
 				setStatus( imageStatus, `${ imageModels.length } ${ loadedMsg }`, false, 'success' );
+				if ( speechModelSelect ) {
+					setStatus( speechStatus, `${ speechModels.length } ${ loadedMsg }`, false, 'success' );
+				}
 			} )
 			.catch( ( error: unknown ) => {
 				if ( gen !== fetchGeneration ) {
@@ -498,6 +514,9 @@ function init(): void {
 				const message = ( err && err.message ) ? err.message : ( i18n.errorLoad || 'Could not load models from endpoint.' );
 				setStatus( textStatus, message, true, 'error' );
 				setStatus( imageStatus, message, true, 'error' );
+				if ( speechModelSelect ) {
+					setStatus( speechStatus, message, true, 'error' );
+				}
 			} );
 	};
 
