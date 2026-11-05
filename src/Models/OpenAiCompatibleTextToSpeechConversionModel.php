@@ -59,6 +59,7 @@ class OpenAiCompatibleTextToSpeechConversionModel extends AbstractApiBasedModel 
 	 */
 	private const MIME_TYPE_TO_RESPONSE_FORMAT = [
 		'audio/mpeg' => 'mp3',
+		'audio/mp3'  => 'mp3',
 		'audio/ogg'  => 'opus',
 		'audio/wav'  => 'wav',
 		'audio/flac' => 'flac',

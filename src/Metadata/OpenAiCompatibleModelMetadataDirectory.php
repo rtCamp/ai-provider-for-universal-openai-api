@@ -219,6 +219,7 @@ class OpenAiCompatibleModelMetadataDirectory extends AbstractApiBasedModelMetada
 					OptionEnum::outputMimeType(),
 					[
 						'audio/mpeg',
+						'audio/mp3',
 						'audio/ogg',
 						'audio/wav',
 						'audio/flac',
