@@ -48,6 +48,7 @@ class OpenAiCompatibleSettings {
 		add_action( 'admin_menu', [ $this, 'register_settings_screen' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_settings_script' ] );
 		add_action( 'wp_ajax_' . self::AJAX_ACTION_MODELS, [ $this, 'ajax_list_models' ] );
+		add_filter( 'ai_provider_for_universal_openai_api_models_url', array( $this, 'custom_ai_endpoint_models_url' ), 10, 2 );
 	}
 
 	/**
@@ -741,6 +742,8 @@ class OpenAiCompatibleSettings {
 	private static function get_models_url( string $endpoint ): string {
 		$models_url = $endpoint . '/models';
 		$models_url = apply_filters( 'ai_provider_for_universal_openai_api_models_url', $models_url, $endpoint );
+		error_log( var_export( $models_url, true ) );
+		error_log( '------------------------' );
 		return apply_filters( 'universal_openai_connector_models_url', $models_url, $endpoint );
 	}
 
@@ -991,5 +994,23 @@ class OpenAiCompatibleSettings {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Filter the models list request URL for Universal OpenAI Connector.
+	 *
+	 * For GitHub Models (models.github.ai), route list request to /v1/models.
+	 * For OpenRouter (openrouter.ai), append output_modalities query parameter to fetch text, image, and speech models.
+	 *
+	 * @param string $models_url The default constructed models URL.
+	 * @param string $endpoint   The user-configured base endpoint URL.
+	 * @return string The filtered models URL.
+	 */
+	function custom_ai_endpoint_models_url( $models_url, $endpoint ) {
+		if ( false !== strpos( $endpoint, 'openrouter.ai' ) || false !== strpos( $models_url, 'openrouter.ai' ) ) {
+			return add_query_arg( 'output_modalities', 'text,image,speech', $models_url );
+		}
+
+		return $models_url;
 	}
 }
