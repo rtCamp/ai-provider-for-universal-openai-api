@@ -18,7 +18,8 @@ AI Provider for Universal OpenAI API registers an `openai_compatible` provider w
 * **Generate text** using any LLM accessible through the configured endpoint
 * **Generate images** using models that support image generation
 * **Synthesize speech** using models that support text-to-speech conversion
-* **Configure default models** for text, image, and speech generation from WordPress admin settings
+* **Make decisions and classifications** using models that support the `/v1/decisions` endpoint
+* **Configure default models** for text, image, speech, and decision generation from WordPress admin settings
 * **Discover available models** automatically from your configured endpoint
 * **Switch endpoints and models** without changing any code — just update your admin settings
 
@@ -53,6 +54,7 @@ The plugin communicates using the standard OpenAI REST API format:
 | `POST /v1/chat/completions` | Text generation requests |
 | `POST /v1/images/generations` | Image generation requests |
 | `POST /v1/audio/speech` | Text-to-speech audio synthesis requests |
+| `POST /v1/decisions` | Typed decision-making and classification requests |
 
 ### Supported endpoints (examples)
 
@@ -203,6 +205,53 @@ add_filter( 'openai_compatible_image_generation_params', function ( array $param
     $params['size'] = '1024x1024';
     return $params;
 } );
+```
+
+### `openai_compatible_decision_params`
+
+Called before sending a decision-making request to `/v1/decisions`. Receives and must return the full parameters array.
+
+```php
+add_filter( 'openai_compatible_decision_params', function ( array $params ): array {
+    return $params;
+} );
+```
+
+### Decision Making
+
+Evaluate content against typed questions using the `/v1/decisions` endpoint:
+
+```php
+use rtCamp\AIProviderUniversalOpenAI\Decisions\DecisionQuestion;
+use rtCamp\AIProviderUniversalOpenAI\Provider\OpenAiCompatibleProvider;
+
+// Instantiate the decision model (uses default decision model or specified model).
+$model = OpenAiCompatibleProvider::decisionModel();
+
+// Define typed evaluation questions.
+$questions = [
+    'is_urgent'  => DecisionQuestion::predicate( 'Does this customer message require urgent escalation?' ),
+    'department' => DecisionQuestion::choice(
+        'Which department should handle this request?',
+        [
+            'billing' => 'Billing and invoice inquiries',
+            'support' => 'Technical support and bug reports',
+            'sales'   => 'Sales inquiries and enterprise licensing',
+        ]
+    ),
+    'frustration' => DecisionQuestion::score(
+        'Rate customer frustration level',
+        [ '1 - Satisfied', '2 - Neutral', '3 - Frustrated', '4 - Extremely angry' ]
+    ),
+];
+
+// Execute decision request.
+$result = $model->decide( $incoming_message, $questions );
+
+// Access typed answers.
+$is_urgent   = $result->getAnswer( 'is_urgent' )->getProbability() > 0.8;
+$department  = $result->getAnswer( 'department' )->getChoice();
+$frustration = $result->getAnswer( 'frustration' )->getScore();
 ```
 
 ### Non-OpenAI backend compatibility
