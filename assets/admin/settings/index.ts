@@ -13,6 +13,7 @@ interface AiProviderForUniversalOpenAiApiSettingsGlobal {
 	selectedTextModel?: string;
 	selectedImageModel?: string;
 	selectedSpeechModel?: string;
+	selectedDecisionModel?: string;
 	i18n?: {
 		loading?: string;
 		loaded?: string;
@@ -33,6 +34,7 @@ interface OpenAiCompatibleModel {
 	name?: string;
 	is_image?: boolean;
 	is_speech?: boolean;
+	is_decision?: boolean;
 }
 
 interface Preset {
@@ -434,6 +436,8 @@ function init(): void {
 		document.getElementById( 'universal_openai_connector_settings-image-model' ) ) as HTMLSelectElement | null;
 	const speechModelSelect = ( document.getElementById( 'ai_provider_for_universal_openai_api_settings-speech-model' ) ||
 		document.getElementById( 'universal_openai_connector_settings-speech-model' ) ) as HTMLSelectElement | null;
+	const decisionModelSelect = ( document.getElementById( 'ai_provider_for_universal_openai_api_settings-decision-model' ) ||
+		document.getElementById( 'universal_openai_connector_settings-decision-model' ) ) as HTMLSelectElement | null;
 
 	if ( ! textModelSelect || ! imageModelSelect ) {
 		initEndpointPreset();
@@ -443,6 +447,7 @@ function init(): void {
 	const textStatus = document.getElementById( 'openai-compatible-text-model-status' );
 	const imageStatus = document.getElementById( 'openai-compatible-image-model-status' );
 	const speechStatus = document.getElementById( 'openai-compatible-speech-model-status' );
+	const decisionStatus = document.getElementById( 'openai-compatible-decision-model-status' );
 	const ajaxUrl = settings.ajaxUrl || '';
 
 	// Generation counter: each new fetch increments it so stale responses are discarded.
@@ -461,11 +466,15 @@ function init(): void {
 		if ( speechModelSelect ) {
 			setStatus( speechStatus, i18n.loading || 'Loading models...', false, 'loading' );
 		}
+		if ( decisionModelSelect ) {
+			setStatus( decisionStatus, i18n.loading || 'Loading models...', false, 'loading' );
+		}
 
 		// Capture current select values before the async response arrives.
 		const currentTextModel = textModelSelect.value;
 		const currentImageModel = imageModelSelect.value;
 		const currentSpeechModel = speechModelSelect ? speechModelSelect.value : '';
+		const currentDecisionModel = decisionModelSelect ? decisionModelSelect.value : '';
 
 		// POST so the optional endpoint_url body parameter reaches the AJAX handler.
 		// null means "no override"; any string (including '') is sent explicitly so PHP can
@@ -487,10 +496,11 @@ function init(): void {
 					throw new Error( i18n.errorLoad || 'Could not load models from endpoint.' );
 				}
 
-				// Filter models for text, image, and speech SELECT elements.
-				const textModels = payload.data.filter( ( model ) => model && ! model.is_image && ! model.is_speech );
+				// Filter models for text, image, speech, and decision SELECT elements.
+				const textModels = payload.data.filter( ( model ) => model && ! model.is_image && ! model.is_speech && ! model.is_decision );
 				const imageModels = payload.data.filter( ( model ) => model && model.is_image );
 				const speechModels = payload.data.filter( ( model ) => model && model.is_speech );
+				const decisionModels = payload.data.filter( ( model ) => model && model.is_decision );
 
 				// Populate SELECT elements, preserving the user's current selection.
 				clearAndFillSelect( textModelSelect, textModels, currentTextModel );
@@ -498,12 +508,18 @@ function init(): void {
 				if ( speechModelSelect ) {
 					clearAndFillSelect( speechModelSelect, speechModels, currentSpeechModel );
 				}
+				if ( decisionModelSelect ) {
+					clearAndFillSelect( decisionModelSelect, decisionModels.length > 0 ? decisionModels : payload.data, currentDecisionModel );
+				}
 
 				const loadedMsg = i18n.loaded || 'models loaded.';
 				setStatus( textStatus, `${ textModels.length } ${ loadedMsg }`, false, 'success' );
 				setStatus( imageStatus, `${ imageModels.length } ${ loadedMsg }`, false, 'success' );
 				if ( speechModelSelect ) {
 					setStatus( speechStatus, `${ speechModels.length } ${ loadedMsg }`, false, 'success' );
+				}
+				if ( decisionModelSelect ) {
+					setStatus( decisionStatus, `${ ( decisionModels.length > 0 ? decisionModels : payload.data ).length } ${ loadedMsg }`, false, 'success' );
 				}
 			} )
 			.catch( ( error: unknown ) => {
@@ -516,6 +532,9 @@ function init(): void {
 				setStatus( imageStatus, message, true, 'error' );
 				if ( speechModelSelect ) {
 					setStatus( speechStatus, message, true, 'error' );
+				}
+				if ( decisionModelSelect ) {
+					setStatus( decisionStatus, message, true, 'error' );
 				}
 			} );
 	};

@@ -22,21 +22,23 @@ use WordPress\AiClient\Providers\Http\DTO\ApiKeyRequestAuthentication;
  */
 class OpenAiCompatibleSettings {
 
-	private const OPTION_GROUP         = 'ai-provider-for-universal-openai-api-settings';
-	private const OPTION_NAME          = 'ai_provider_for_universal_openai_api_settings';
-	private const PAGE_SLUG            = 'ai-provider-for-universal-openai-api';
-	private const SECTION_ID           = 'ai_provider_for_universal_openai_api_main';
-	private const AJAX_ACTION_MODELS   = 'ai_provider_for_universal_openai_api_models';
-	private const NONCE_ACTION         = 'ai_provider_for_universal_openai_api_nonce';
-	private const KEY_ENDPOINT_URL     = 'endpoint_url';
-	private const KEY_TEXT_MODEL       = 'text_model';
-	private const KEY_IMAGE_MODEL      = 'image_model';
-	private const KEY_SPEECH_MODEL     = 'speech_model';
-	private const DEFAULT_ENDPOINT     = 'https://api.openai.com/v1';
-	private const DEFAULT_TEXT_MODEL   = '';
-	private const DEFAULT_IMAGE_MODEL  = '';
-	private const DEFAULT_SPEECH_MODEL = '';
-	private const MODELS_CACHE_TTL     = HOUR_IN_SECONDS;
+	private const OPTION_GROUP           = 'ai-provider-for-universal-openai-api-settings';
+	private const OPTION_NAME            = 'ai_provider_for_universal_openai_api_settings';
+	private const PAGE_SLUG              = 'ai-provider-for-universal-openai-api';
+	private const SECTION_ID             = 'ai_provider_for_universal_openai_api_main';
+	private const AJAX_ACTION_MODELS     = 'ai_provider_for_universal_openai_api_models';
+	private const NONCE_ACTION           = 'ai_provider_for_universal_openai_api_nonce';
+	private const KEY_ENDPOINT_URL       = 'endpoint_url';
+	private const KEY_TEXT_MODEL         = 'text_model';
+	private const KEY_IMAGE_MODEL        = 'image_model';
+	private const KEY_SPEECH_MODEL       = 'speech_model';
+	private const KEY_DECISION_MODEL     = 'decision_model';
+	private const DEFAULT_ENDPOINT       = 'https://api.openai.com/v1';
+	private const DEFAULT_TEXT_MODEL     = '';
+	private const DEFAULT_IMAGE_MODEL    = '';
+	private const DEFAULT_SPEECH_MODEL   = '';
+	private const DEFAULT_DECISION_MODEL = '';
+	private const MODELS_CACHE_TTL       = HOUR_IN_SECONDS;
 
 	/**
 	 * Initializes settings hooks.
@@ -109,6 +111,15 @@ class OpenAiCompatibleSettings {
 			self::SECTION_ID,
 			[ 'label_for' => self::OPTION_NAME . '-speech-model' ]
 		);
+
+		add_settings_field(
+			self::OPTION_NAME . '_decision_model',
+			__( 'Default Decision Model', 'ai-provider-for-universal-openai-api' ),
+			[ $this, 'render_decision_model_field' ],
+			self::PAGE_SLUG,
+			self::SECTION_ID,
+			[ 'label_for' => self::OPTION_NAME . '-decision-model' ]
+		);
 	}
 
 	/**
@@ -165,21 +176,25 @@ class OpenAiCompatibleSettings {
 		}
 		$endpoint_url = rtrim( $endpoint_url, '/' );
 
-		$text_model   = isset( $value[ self::KEY_TEXT_MODEL ] )
+		$text_model     = isset( $value[ self::KEY_TEXT_MODEL ] )
 			? sanitize_text_field( trim( (string) $value[ self::KEY_TEXT_MODEL ] ) )
 			: self::DEFAULT_TEXT_MODEL;
-		$image_model  = isset( $value[ self::KEY_IMAGE_MODEL ] )
+		$image_model    = isset( $value[ self::KEY_IMAGE_MODEL ] )
 			? sanitize_text_field( trim( (string) $value[ self::KEY_IMAGE_MODEL ] ) )
 			: self::DEFAULT_IMAGE_MODEL;
-		$speech_model = isset( $value[ self::KEY_SPEECH_MODEL ] )
+		$speech_model   = isset( $value[ self::KEY_SPEECH_MODEL ] )
 			? sanitize_text_field( trim( (string) $value[ self::KEY_SPEECH_MODEL ] ) )
 			: self::DEFAULT_SPEECH_MODEL;
+		$decision_model = isset( $value[ self::KEY_DECISION_MODEL ] )
+			? sanitize_text_field( trim( (string) $value[ self::KEY_DECISION_MODEL ] ) )
+			: self::DEFAULT_DECISION_MODEL;
 
 		return [
-			self::KEY_ENDPOINT_URL => $endpoint_url,
-			self::KEY_TEXT_MODEL   => $text_model,
-			self::KEY_IMAGE_MODEL  => $image_model,
-			self::KEY_SPEECH_MODEL => $speech_model,
+			self::KEY_ENDPOINT_URL   => $endpoint_url,
+			self::KEY_TEXT_MODEL     => $text_model,
+			self::KEY_IMAGE_MODEL    => $image_model,
+			self::KEY_SPEECH_MODEL   => $speech_model,
+			self::KEY_DECISION_MODEL => $decision_model,
 		];
 	}
 
@@ -414,6 +429,29 @@ class OpenAiCompatibleSettings {
 	}
 
 	/**
+	 * Renders decision model dropdown.
+	 *
+	 * @since 1.3.0
+	 */
+	public function render_decision_model_field(): void {
+		$settings = self::get_settings();
+		$value    = (string) ( $settings[ self::KEY_DECISION_MODEL ] ?? '' );
+		$id       = self::OPTION_NAME . '-decision-model';
+		$name     = self::OPTION_NAME . '[' . self::KEY_DECISION_MODEL . ']';
+		?>
+		<div class="openai-compatible-model-select-wrapper">
+			<select id="<?php echo esc_attr( $id ); ?>" name="<?php echo esc_attr( $name ); ?>" class="regular-text">
+				<option value="<?php echo esc_attr( $value ); ?>"><?php echo esc_html( $value ); ?></option>
+			</select>
+			<span id="openai-compatible-decision-model-status" class="openai-compatible-model-status"></span>
+		</div>
+		<p class="description">
+			<?php esc_html_e( 'Optional override. Leave as "Use AI Client default" to let WordPress AI Client choose.', 'ai-provider-for-universal-openai-api' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
 	 * Enqueues settings page JavaScript.
 	 *
 	 * @since 1.0.0
@@ -449,7 +487,7 @@ class OpenAiCompatibleSettings {
 		wp_style_add_data( 'ai-provider-for-universal-openai-api-settings', 'rtl', 'replace' );
 
 		$settings_data = [
-			'ajaxUrl'             => esc_url_raw(
+			'ajaxUrl'               => esc_url_raw(
 				add_query_arg(
 					[
 						'action'   => self::AJAX_ACTION_MODELS,
@@ -458,10 +496,11 @@ class OpenAiCompatibleSettings {
 					admin_url( 'admin-ajax.php' )
 				)
 			),
-			'selectedTextModel'   => self::get_selected_text_model(),
-			'selectedImageModel'  => self::get_selected_image_model(),
-			'selectedSpeechModel' => self::get_selected_speech_model(),
-			'i18n'                => [
+			'selectedTextModel'     => self::get_selected_text_model(),
+			'selectedImageModel'    => self::get_selected_image_model(),
+			'selectedSpeechModel'   => self::get_selected_speech_model(),
+			'selectedDecisionModel' => self::get_selected_decision_model(),
+			'i18n'                  => [
 				'loading'         => __( 'Loading models…', 'ai-provider-for-universal-openai-api' ),
 				'loaded'          => __( 'models loaded.', 'ai-provider-for-universal-openai-api' ),
 				'errorLoad'       => __( 'Could not load models from endpoint.', 'ai-provider-for-universal-openai-api' ),
@@ -598,10 +637,11 @@ class OpenAiCompatibleSettings {
 						}
 
 						return [
-							'id'        => $id,
-							'name'      => $name,
-							'is_image'  => self::is_likely_image_model( $id ),
-							'is_speech' => self::is_likely_speech_model( $id ),
+							'id'          => $id,
+							'name'        => $name,
+							'is_image'    => self::is_likely_image_model( $id ),
+							'is_speech'   => self::is_likely_speech_model( $id ),
+							'is_decision' => self::is_likely_decision_model( $id ),
 						];
 					},
 					$raw_models
@@ -639,7 +679,7 @@ class OpenAiCompatibleSettings {
 		}
 
 		foreach ( self::fetch_all_models() as $model ) {
-			if ( ! self::is_likely_image_model( (string) $model['id'] ) && ! self::is_likely_speech_model( (string) $model['id'] ) ) {
+			if ( ! self::is_likely_image_model( (string) $model['id'] ) && ! self::is_likely_speech_model( (string) $model['id'] ) && ! self::is_likely_decision_model( (string) $model['id'] ) ) {
 				return (string) $model['id'];
 			}
 		}
@@ -717,6 +757,40 @@ class OpenAiCompatibleSettings {
 	}
 
 	/**
+	 * Returns selected decision model.
+	 *
+	 * @since 1.3.0
+	 */
+	public static function get_selected_decision_model(): string {
+		$settings = self::get_settings();
+		return trim( (string) ( $settings[ self::KEY_DECISION_MODEL ] ?? '' ) );
+	}
+
+	/**
+	 * Returns the effective decision model identifier.
+	 *
+	 * Returns the user-configured decision model when set. Otherwise fetches the
+	 * list of available models from the endpoint and returns the first model
+	 * that resembles a decision model, or an empty string if none is found.
+	 *
+	 * @since 1.3.0
+	 */
+	public static function get_effective_decision_model(): string {
+		$selected = self::get_selected_decision_model();
+		if ( '' !== $selected ) {
+			return $selected;
+		}
+
+		foreach ( self::fetch_all_models() as $model ) {
+			if ( self::is_likely_decision_model( (string) $model['id'] ) ) {
+				return (string) $model['id'];
+			}
+		}
+
+		return '';
+	}
+
+	/**
 	 * Returns endpoint URL.
 	 *
 	 * @since 1.0.0
@@ -775,10 +849,11 @@ class OpenAiCompatibleSettings {
 	 */
 	private static function get_default_settings(): array {
 		return [
-			self::KEY_ENDPOINT_URL => self::DEFAULT_ENDPOINT,
-			self::KEY_TEXT_MODEL   => self::DEFAULT_TEXT_MODEL,
-			self::KEY_IMAGE_MODEL  => self::DEFAULT_IMAGE_MODEL,
-			self::KEY_SPEECH_MODEL => self::DEFAULT_SPEECH_MODEL,
+			self::KEY_ENDPOINT_URL   => self::DEFAULT_ENDPOINT,
+			self::KEY_TEXT_MODEL     => self::DEFAULT_TEXT_MODEL,
+			self::KEY_IMAGE_MODEL    => self::DEFAULT_IMAGE_MODEL,
+			self::KEY_SPEECH_MODEL   => self::DEFAULT_SPEECH_MODEL,
+			self::KEY_DECISION_MODEL => self::DEFAULT_DECISION_MODEL,
 		];
 	}
 
@@ -901,10 +976,11 @@ class OpenAiCompatibleSettings {
 						}
 
 						return [
-							'id'        => $id,
-							'name'      => $name,
-							'is_image'  => self::is_likely_image_model( $id ),
-							'is_speech' => self::is_likely_speech_model( $id ),
+							'id'          => $id,
+							'name'        => $name,
+							'is_image'    => self::is_likely_image_model( $id ),
+							'is_speech'   => self::is_likely_speech_model( $id ),
+							'is_decision' => self::is_likely_decision_model( $id ),
 						];
 					},
 					$raw_models
@@ -992,6 +1068,42 @@ class OpenAiCompatibleSettings {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Returns true if the model ID resembles a decision-making model.
+	 *
+	 * Uses keyword matching on the lowercased model identifier to detect
+	 * decision models like gpt-6-luna or custom decision models.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @param string $model_id The model identifier to inspect.
+	 * @return bool True if the model resembles a decision model.
+	 */
+	public static function is_likely_decision_model( string $model_id ): bool {
+		$lower    = strtolower( $model_id );
+		$keywords = [
+			'luna',
+			'decision',
+			'-decision',
+			'decision-',
+			'/decision',
+			'decision/',
+			'systemone',
+			'nimble',
+			'tev1',
+		];
+
+		$is_decision = false;
+		foreach ( $keywords as $keyword ) {
+			if ( false !== strpos( $lower, $keyword ) ) {
+				$is_decision = true;
+				break;
+			}
+		}
+
+		return (bool) apply_filters( 'openai_compatible_is_likely_decision_model', $is_decision, $model_id );
 	}
 
 	/**
