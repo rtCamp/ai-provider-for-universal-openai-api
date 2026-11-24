@@ -3,7 +3,7 @@
  * An answer from an OpenAI-compatible decision model.
  *
  * @package rtCamp\AIProviderUniversalOpenAI\Decisions
- * @since   1.3.0
+ * @since   1.2.0
  */
 
 declare( strict_types=1 );
@@ -21,14 +21,14 @@ namespace rtCamp\AIProviderUniversalOpenAI\Decisions;
  *  - choice:         getChoice(), getProbabilities(), getConfidence().
  *  - score:          getScore(), getProbabilities(), getConfidence(), getLegend().
  *
- * @since 1.3.0
+ * @since 1.2.0
  */
 class DecisionAnswer {
 
 	/**
 	 * The question type.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @var \rtCamp\AIProviderUniversalOpenAI\Decisions\DecisionTypeEnum
 	 */
@@ -37,7 +37,7 @@ class DecisionAnswer {
 	/**
 	 * The answer value: the option key for choice, a probability for predicate, a position/rating for score.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @var string|float
 	 */
@@ -46,7 +46,7 @@ class DecisionAnswer {
 	/**
 	 * The probability of each option or level.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @var array<string, float>
 	 */
@@ -55,7 +55,7 @@ class DecisionAnswer {
 	/**
 	 * Confidence distribution score from 0 to 1, or null when unavailable.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @var float|null
 	 */
@@ -64,7 +64,7 @@ class DecisionAnswer {
 	/**
 	 * The score level descriptions, keyed by level index or name.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @var array<string, string>
 	 */
@@ -73,7 +73,7 @@ class DecisionAnswer {
 	/**
 	 * Constructor.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @param \rtCamp\AIProviderUniversalOpenAI\Decisions\DecisionTypeEnum $type          The question type.
 	 * @param string|float                                                 $value         The answer value.
@@ -100,7 +100,7 @@ class DecisionAnswer {
 	 *
 	 * Handles both OpenAI-compatible format and structured dictionary payloads.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @param \rtCamp\AIProviderUniversalOpenAI\Decisions\DecisionTypeEnum $type The type of the question asked.
 	 * @param mixed                                                        $data The answer data from the response.
@@ -216,7 +216,7 @@ class DecisionAnswer {
 	/**
 	 * Returns the question type.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @return \rtCamp\AIProviderUniversalOpenAI\Decisions\DecisionTypeEnum The question type.
 	 */
@@ -227,7 +227,7 @@ class DecisionAnswer {
 	/**
 	 * Returns the raw answer value.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @return string|float The option key for choice, probability for predicate, position for score.
 	 */
@@ -238,7 +238,7 @@ class DecisionAnswer {
 	/**
 	 * Returns the chosen option for a choice answer.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @return string|null The option key, or null if not a choice answer.
 	 */
@@ -249,7 +249,7 @@ class DecisionAnswer {
 	/**
 	 * Returns the probability for a predicate answer.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @return float|null The probability from 0.0 to 1.0, or null if not a predicate answer.
 	 */
@@ -260,7 +260,7 @@ class DecisionAnswer {
 	/**
 	 * Returns the numerical score for a score answer.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @return float|null The numeric score, or null if not a score answer.
 	 */
@@ -271,7 +271,7 @@ class DecisionAnswer {
 	/**
 	 * Returns the probability distribution across choices or rubric levels.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @return array<string, float> The probability map.
 	 */
@@ -282,7 +282,7 @@ class DecisionAnswer {
 	/**
 	 * Returns the confidence metric.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @return float|null The confidence from 0.0 to 1.0, or null.
 	 */
@@ -293,7 +293,7 @@ class DecisionAnswer {
 	/**
 	 * Returns the score rubric level descriptions.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @return array<string, string> The legend map.
 	 */
@@ -304,7 +304,7 @@ class DecisionAnswer {
 	/**
 	 * Reads probabilities map from response array.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @param array<string, mixed> $data The response data array.
 	 * @return array<string, float> The parsed probabilities.
@@ -330,7 +330,7 @@ class DecisionAnswer {
 	/**
 	 * Reads confidence float from response array.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @param array<string, mixed> $data The response data array.
 	 * @return float|null The confidence float or null.

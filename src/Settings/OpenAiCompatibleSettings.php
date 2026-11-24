@@ -431,7 +431,7 @@ class OpenAiCompatibleSettings {
 	/**
 	 * Renders decision model dropdown.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 */
 	public function render_decision_model_field(): void {
 		$settings = self::get_settings();
@@ -759,7 +759,7 @@ class OpenAiCompatibleSettings {
 	/**
 	 * Returns selected decision model.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 */
 	public static function get_selected_decision_model(): string {
 		$settings = self::get_settings();
@@ -773,7 +773,7 @@ class OpenAiCompatibleSettings {
 	 * list of available models from the endpoint and returns the first model
 	 * that resembles a decision model, or an empty string if none is found.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 */
 	public static function get_effective_decision_model(): string {
 		$selected = self::get_selected_decision_model();
@@ -1076,7 +1076,7 @@ class OpenAiCompatibleSettings {
 	 * Uses keyword matching on the lowercased model identifier to detect
 	 * decision models like gpt-6-luna or custom decision models.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @param string $model_id The model identifier to inspect.
 	 * @return bool True if the model resembles a decision model.

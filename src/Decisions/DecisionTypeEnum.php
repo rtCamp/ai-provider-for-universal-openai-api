@@ -3,7 +3,7 @@
  * Enum for decision question types.
  *
  * @package rtCamp\AIProviderUniversalOpenAI\Decisions
- * @since   1.3.0
+ * @since   1.2.0
  */
 
 declare( strict_types=1 );
@@ -15,7 +15,7 @@ use WordPress\AiClient\Common\AbstractEnum;
 /**
  * Enum for the question types an OpenAI-compatible decision model answers.
  *
- * @since 1.3.0
+ * @since 1.2.0
  *
  * @method static self predicate() Creates an instance for the PREDICATE type.
  * @method static self choice() Creates an instance for the CHOICE type.

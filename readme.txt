@@ -3,7 +3,7 @@ Contributors:      rtcamp, milindmore22, vishal4669, aishwarryapande, aviralmitt
 Tags:              ai, openai, llm, text-generation, image-generation, text-to-speech, speech-synthesis
 Requires at least: 7.0
 Tested up to:      7.0
-Stable tag:        1.1.0
+Stable tag:        1.2.0
 Requires PHP:      7.4
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
@@ -115,7 +115,7 @@ Generating images can take significant time on slow or self-hosted backends. The
 
 == Changelog ==
 
-= 1.3.0 =
+= 1.2.0 =
 
 * Feature: Implement decision-making capability via the `/v1/decisions` endpoint.
 * Feature: Added `OpenAiCompatibleProvider::decisionModel()` and `OpenAiCompatibleProvider::decisionModelIds()`.

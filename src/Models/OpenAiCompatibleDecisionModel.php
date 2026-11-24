@@ -2,7 +2,7 @@
 /**
  * Decision model for OpenAI-compatible endpoints.
  *
- * @since 1.3.0
+ * @since 1.2.0
  * @package rtCamp\AIProviderUniversalOpenAI
  */
 
@@ -27,7 +27,7 @@ use rtCamp\AIProviderUniversalOpenAI\Settings\OpenAiCompatibleSettings;
  *
  * Evaluates inputs against typed questions using the OpenAI-compatible /v1/decisions endpoint.
  *
- * @since 1.3.0
+ * @since 1.2.0
  *
  * @phpstan-type ResponseData array{
  *     model?: string,
@@ -42,7 +42,7 @@ class OpenAiCompatibleDecisionModel extends AbstractApiBasedModel {
 	/**
 	 * The maximum number of questions accepted in one decision request.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @var int
 	 */
@@ -51,7 +51,7 @@ class OpenAiCompatibleDecisionModel extends AbstractApiBasedModel {
 	/**
 	 * The maximum request body size in bytes (20 MB).
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @var int
 	 */
@@ -60,7 +60,7 @@ class OpenAiCompatibleDecisionModel extends AbstractApiBasedModel {
 	/**
 	 * Evaluates state against typed questions and returns structured decisions.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @param string|array<mixed>                                                         $state     The input to evaluate: a non-empty string or array.
 	 * @param array<string, \rtCamp\AIProviderUniversalOpenAI\Decisions\DecisionQuestion> $questions Between 1 and 64 questions, keyed by question name.
@@ -101,7 +101,7 @@ class OpenAiCompatibleDecisionModel extends AbstractApiBasedModel {
 	/**
 	 * Prepares request parameters for the /v1/decisions endpoint.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @param mixed                                                                       $state     The input to evaluate.
 	 * @param array<string, \rtCamp\AIProviderUniversalOpenAI\Decisions\DecisionQuestion> $questions The questions keyed by name.
@@ -175,7 +175,7 @@ class OpenAiCompatibleDecisionModel extends AbstractApiBasedModel {
 	/**
 	 * Parses the API response into a DecisionResult.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @param \WordPress\AiClient\Providers\Http\DTO\Response                             $response  The HTTP response.
 	 * @param array<string, \rtCamp\AIProviderUniversalOpenAI\Decisions\DecisionQuestion> $questions The map of questions asked.
@@ -229,7 +229,7 @@ class OpenAiCompatibleDecisionModel extends AbstractApiBasedModel {
 	 *
 	 * Supports answers object, output list, and questions list.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @param array<string, mixed> $response_data The response data array.
 	 * @return array<string, mixed>|null The extracted answers map, or null if none found.

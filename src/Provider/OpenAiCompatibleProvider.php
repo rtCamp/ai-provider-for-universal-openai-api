@@ -148,7 +148,7 @@ class OpenAiCompatibleProvider extends AbstractApiProvider {
 	 *         ]
 	 *     );
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @param string|null                                               $model_id     Optional. Model ID. If null, uses the default
 	 *                                                                                decision model from settings.
@@ -191,7 +191,7 @@ class OpenAiCompatibleProvider extends AbstractApiProvider {
 	/**
 	 * Lists the models on the configured endpoint that support decisions.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @return list<string> The model IDs, sorted.
 	 */

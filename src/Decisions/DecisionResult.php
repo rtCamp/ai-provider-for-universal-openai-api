@@ -3,7 +3,7 @@
  * The result of a decision request.
  *
  * @package rtCamp\AIProviderUniversalOpenAI\Decisions
- * @since   1.3.0
+ * @since   1.2.0
  */
 
 declare( strict_types=1 );
@@ -17,14 +17,14 @@ use WordPress\AiClient\Results\DTO\TokenUsage;
 /**
  * Class for the answers a decision model gave to a set of questions.
  *
- * @since 1.3.0
+ * @since 1.2.0
  */
 class DecisionResult {
 
 	/**
 	 * The model that answered.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @var string
 	 */
@@ -33,7 +33,7 @@ class DecisionResult {
 	/**
 	 * The answers, keyed by question name.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @var array<string, \rtCamp\AIProviderUniversalOpenAI\Decisions\DecisionAnswer>
 	 */
@@ -42,7 +42,7 @@ class DecisionResult {
 	/**
 	 * The token usage.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @var \WordPress\AiClient\Results\DTO\TokenUsage
 	 */
@@ -51,7 +51,7 @@ class DecisionResult {
 	/**
 	 * Constructor.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @param string                                                                    $model_id    The model that answered.
 	 * @param array<string, \rtCamp\AIProviderUniversalOpenAI\Decisions\DecisionAnswer> $answers     The answers, keyed by question name.
@@ -66,7 +66,7 @@ class DecisionResult {
 	/**
 	 * Returns the model that answered.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @return string The model ID.
 	 */
@@ -77,7 +77,7 @@ class DecisionResult {
 	/**
 	 * Returns every answer, keyed by question name.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @return array<string, \rtCamp\AIProviderUniversalOpenAI\Decisions\DecisionAnswer> The answers.
 	 */
@@ -88,7 +88,7 @@ class DecisionResult {
 	/**
 	 * Checks whether there is an answer for the given question.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @param string $name The question name.
 	 * @return bool True if the question was answered.
@@ -100,7 +100,7 @@ class DecisionResult {
 	/**
 	 * Returns the answer for the given question.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @param string $name The question name.
 	 * @return \rtCamp\AIProviderUniversalOpenAI\Decisions\DecisionAnswer The answer.
@@ -121,7 +121,7 @@ class DecisionResult {
 	/**
 	 * Returns the token usage for this decision request.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @return \WordPress\AiClient\Results\DTO\TokenUsage The token usage.
 	 */

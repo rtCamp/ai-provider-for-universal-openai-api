@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.3.0
+## 1.2.0
 
 - Added decision-making capability via the `/v1/decisions` endpoint.
 - Added `OpenAiCompatibleProvider::decisionModel()` and `OpenAiCompatibleProvider::decisionModelIds()`.

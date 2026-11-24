@@ -3,7 +3,7 @@
  * A question for an OpenAI-compatible decision model.
  *
  * @package rtCamp\AIProviderUniversalOpenAI\Decisions
- * @since   1.3.0
+ * @since   1.2.0
  */
 
 declare( strict_types=1 );
@@ -16,14 +16,14 @@ namespace rtCamp\AIProviderUniversalOpenAI\Decisions;
 /**
  * Class for a single typed question asked of a decision model.
  *
- * @since 1.3.0
+ * @since 1.2.0
  */
 class DecisionQuestion {
 
 	/**
 	 * The minimum number of options or levels a choice or score question takes.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @var int
 	 */
@@ -32,7 +32,7 @@ class DecisionQuestion {
 	/**
 	 * The maximum number of options or levels a choice or score question takes.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @var int
 	 */
@@ -41,7 +41,7 @@ class DecisionQuestion {
 	/**
 	 * The question type.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @var \rtCamp\AIProviderUniversalOpenAI\Decisions\DecisionTypeEnum
 	 */
@@ -50,7 +50,7 @@ class DecisionQuestion {
 	/**
 	 * The question instructions.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @var string
 	 */
@@ -59,7 +59,7 @@ class DecisionQuestion {
 	/**
 	 * The criteria in the shape the API expects, or null when none are sent.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @var array<string, string>|list<string>|null
 	 */
@@ -68,7 +68,7 @@ class DecisionQuestion {
 	/**
 	 * Constructor.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @param \rtCamp\AIProviderUniversalOpenAI\Decisions\DecisionTypeEnum $type         The question type.
 	 * @param string                                                       $instructions The question instructions.
@@ -88,7 +88,7 @@ class DecisionQuestion {
 	/**
 	 * Creates a question that evaluates whether a statement is true or false.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @param string      $instructions      The question instructions.
 	 * @param string|null $false_description Optional. What a false outcome means. Default null.
@@ -111,7 +111,7 @@ class DecisionQuestion {
 	/**
 	 * Creates a question that estimates the probability that a statement is true (alias for predicate).
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @param string      $instructions      The question instructions.
 	 * @param string|null $false_description Optional. What a false outcome means. Default null.
@@ -126,7 +126,7 @@ class DecisionQuestion {
 	/**
 	 * Creates a question that picks one option from a named set.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @param string|array<string, string> $instructions The question instructions, or options map when called with one argument.
 	 * @param array<string, string>|null   $options      Optional. Map of option key to its description, 2 to 26 entries.
@@ -161,7 +161,7 @@ class DecisionQuestion {
 	/**
 	 * Creates a question that rates against ordered rubric levels.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @param string|list<string> $instructions The question instructions, or levels array when called with one argument.
 	 * @param list<string>|null   $levels       Optional. Level descriptions from lowest to highest, 2 to 26 entries.
@@ -191,7 +191,7 @@ class DecisionQuestion {
 	/**
 	 * Returns the question type.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @return \rtCamp\AIProviderUniversalOpenAI\Decisions\DecisionTypeEnum The question type.
 	 */
@@ -202,7 +202,7 @@ class DecisionQuestion {
 	/**
 	 * Returns the question instructions.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @return string The question instructions.
 	 */
@@ -213,7 +213,7 @@ class DecisionQuestion {
 	/**
 	 * Returns the criteria in the shape the API expects.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @return array<string, string>|list<string>|null The option map for choice questions,
 	 *                                                 level list for score questions, or null.
@@ -225,7 +225,7 @@ class DecisionQuestion {
 	/**
 	 * Returns the question in the shape the OpenAI-compatible /v1/decisions endpoint expects.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @param string $name The question name/identifier.
 	 * @return array<string, mixed> The question data.
@@ -259,7 +259,7 @@ class DecisionQuestion {
 	/**
 	 * Returns the question as an array formatted for the OpenAI Decisions specification.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @return array<string, mixed> The question data.
 	 */
@@ -270,7 +270,7 @@ class DecisionQuestion {
 	/**
 	 * Checks that a choice or score question has an accepted number of criteria.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @param string $type  The question type, for the error message.
 	 * @param int    $count The number of criteria given.
@@ -297,7 +297,7 @@ class DecisionQuestion {
 	/**
 	 * Reads a criterion description, rejecting anything but a non-empty string.
 	 *
-	 * @since 1.3.0
+	 * @since 1.2.0
 	 *
 	 * @param mixed  $description The description.
 	 * @param string $label       What the description belongs to, for the error message.
