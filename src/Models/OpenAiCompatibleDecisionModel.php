@@ -236,7 +236,21 @@ class OpenAiCompatibleDecisionModel extends AbstractApiBasedModel {
 	 */
 	private function extractRawAnswers( array $response_data ): ?array {
 		if ( isset( $response_data['answers'] ) && is_array( $response_data['answers'] ) ) {
-			return $response_data['answers'];
+			// If answers is an associative map keyed by question name, return directly.
+			if ( ! array_is_list( $response_data['answers'] ) ) {
+				return $response_data['answers'];
+			}
+
+			// If answers is a list of answer objects [ {"name": "...", ...}, ... ], re-key by name.
+			$answers = [];
+			foreach ( $response_data['answers'] as $item ) {
+				if ( ! is_array( $item ) || ! isset( $item['name'] ) || ! is_string( $item['name'] ) ) {
+					continue;
+				}
+
+				$answers[ $item['name'] ] = $item;
+			}
+			return $answers;
 		}
 
 		$list = null;

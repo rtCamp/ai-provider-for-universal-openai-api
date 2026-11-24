@@ -240,19 +240,39 @@ class DecisionQuestion {
 		}
 
 		if ( $this->type->isChoice() ) {
+			$choices = [];
+			if ( is_array( $this->criteria ) ) {
+				foreach ( $this->criteria as $val => $desc ) {
+					$choices[] = [
+						'value'       => (string) $val,
+						'description' => (string) $desc,
+					];
+				}
+			}
+
 			return [
 				'type'         => 'choice',
 				'name'         => $name,
 				'instructions' => $this->instructions,
-				'options'      => is_array( $this->criteria ) ? array_keys( $this->criteria ) : [],
+				'choices'      => $choices,
 			];
+		}
+
+		$levels = [];
+		if ( is_array( $this->criteria ) ) {
+			foreach ( array_values( $this->criteria ) as $desc ) {
+				$levels[] = [
+					'label'       => (string) $desc,
+					'description' => (string) $desc,
+				];
+			}
 		}
 
 		return [
 			'type'         => 'score',
 			'name'         => $name,
 			'instructions' => $this->instructions,
-			'options'      => is_array( $this->criteria ) ? array_values( $this->criteria ) : [],
+			'levels'       => $levels,
 		];
 	}
 
