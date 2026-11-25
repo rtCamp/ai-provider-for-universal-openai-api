@@ -679,7 +679,7 @@ class OpenAiCompatibleSettings {
 		}
 
 		foreach ( self::fetch_all_models() as $model ) {
-			if ( ! self::is_likely_image_model( (string) $model['id'] ) && ! self::is_likely_speech_model( (string) $model['id'] ) && ! self::is_likely_decision_model( (string) $model['id'] ) ) {
+			if ( ! self::is_likely_image_model( (string) $model['id'] ) && ! self::is_likely_speech_model( (string) $model['id'] ) ) {
 				return (string) $model['id'];
 			}
 		}
@@ -1083,21 +1083,17 @@ class OpenAiCompatibleSettings {
 	 */
 	public static function is_likely_decision_model( string $model_id ): bool {
 		$lower    = strtolower( $model_id );
-		$keywords = [
-			'luna',
-			'decision',
-			'-decision',
-			'decision-',
-			'/decision',
-			'decision/',
-			'systemone',
-			'nimble',
-			'tev1',
+		$patterns = [
+			'/(?:^|[\/_\.-])decision(?:[\/_\.-]|$)/',
+			'/(?:^|[\/_\.-])luna(?:[\/_\.-]|$)/',
+			'/(?:^|[\/_\.-])systemone(?:[\/_\.-]|$)/',
+			'/(?:^|[\/_\.-])nimble(?:[\/_\.-]|$)/',
+			'/(?:^|[\/_\.-])tev1(?:[\/_\.-]|$)/',
 		];
 
 		$is_decision = false;
-		foreach ( $keywords as $keyword ) {
-			if ( false !== strpos( $lower, $keyword ) ) {
+		foreach ( $patterns as $pattern ) {
+			if ( 1 === preg_match( $pattern, $lower ) ) {
 				$is_decision = true;
 				break;
 			}

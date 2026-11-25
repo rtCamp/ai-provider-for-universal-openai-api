@@ -497,7 +497,9 @@ function init(): void {
 				}
 
 				// Filter models for text, image, speech, and decision SELECT elements.
-				const textModels = payload.data.filter( ( model ) => model && ! model.is_image && ! model.is_speech && ! model.is_decision );
+				// Text models exclude image and speech models, but include decision-capable models
+				// since models like gpt-4o-mini can handle both text chat and decisions.
+				const textModels = payload.data.filter( ( model ) => model && ! model.is_image && ! model.is_speech );
 				const imageModels = payload.data.filter( ( model ) => model && model.is_image );
 				const speechModels = payload.data.filter( ( model ) => model && model.is_speech );
 				const decisionModels = payload.data.filter( ( model ) => model && model.is_decision );
