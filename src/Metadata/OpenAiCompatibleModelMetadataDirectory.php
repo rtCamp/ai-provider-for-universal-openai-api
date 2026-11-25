@@ -50,8 +50,8 @@ class OpenAiCompatibleModelMetadataDirectory extends AbstractApiBasedModelMetada
 				continue;
 			}
 
-			$is_image  = ! empty( $model['is_image'] );
-			$is_speech = ! empty( $model['is_speech'] ) || OpenAiCompatibleSettings::is_likely_speech_model( $model_id );
+			$is_image  = ! empty( $model['is_image'] ) || OpenAiCompatibleSettings::is_likely_image_model( $model_id, $model );
+			$is_speech = ! empty( $model['is_speech'] ) || OpenAiCompatibleSettings::is_likely_speech_model( $model_id, $model );
 			if ( $is_image ) {
 				$models_map[ $model_id ] = $this->createImageModelMetadata( $model_id );
 			} elseif ( $is_speech ) {

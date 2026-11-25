@@ -22,21 +22,23 @@ use WordPress\AiClient\Providers\Http\DTO\ApiKeyRequestAuthentication;
  */
 class OpenAiCompatibleSettings {
 
-	private const OPTION_GROUP         = 'ai-provider-for-universal-openai-api-settings';
-	private const OPTION_NAME          = 'ai_provider_for_universal_openai_api_settings';
-	private const PAGE_SLUG            = 'ai-provider-for-universal-openai-api';
-	private const SECTION_ID           = 'ai_provider_for_universal_openai_api_main';
-	private const AJAX_ACTION_MODELS   = 'ai_provider_for_universal_openai_api_models';
-	private const NONCE_ACTION         = 'ai_provider_for_universal_openai_api_nonce';
-	private const KEY_ENDPOINT_URL     = 'endpoint_url';
-	private const KEY_TEXT_MODEL       = 'text_model';
-	private const KEY_IMAGE_MODEL      = 'image_model';
-	private const KEY_SPEECH_MODEL     = 'speech_model';
-	private const DEFAULT_ENDPOINT     = 'https://api.openai.com/v1';
-	private const DEFAULT_TEXT_MODEL   = '';
-	private const DEFAULT_IMAGE_MODEL  = '';
-	private const DEFAULT_SPEECH_MODEL = '';
-	private const MODELS_CACHE_TTL     = HOUR_IN_SECONDS;
+	private const OPTION_GROUP           = 'ai-provider-for-universal-openai-api-settings';
+	private const OPTION_NAME            = 'ai_provider_for_universal_openai_api_settings';
+	private const PAGE_SLUG              = 'ai-provider-for-universal-openai-api';
+	private const SECTION_ID             = 'ai_provider_for_universal_openai_api_main';
+	private const AJAX_ACTION_MODELS     = 'ai_provider_for_universal_openai_api_models';
+	private const NONCE_ACTION           = 'ai_provider_for_universal_openai_api_nonce';
+	private const KEY_ENDPOINT_URL       = 'endpoint_url';
+	private const KEY_TEXT_MODEL         = 'text_model';
+	private const KEY_IMAGE_MODEL        = 'image_model';
+	private const KEY_SPEECH_MODEL       = 'speech_model';
+	private const KEY_DECISION_MODEL     = 'decision_model';
+	private const DEFAULT_ENDPOINT       = 'https://api.openai.com/v1';
+	private const DEFAULT_TEXT_MODEL     = '';
+	private const DEFAULT_IMAGE_MODEL    = '';
+	private const DEFAULT_SPEECH_MODEL   = '';
+	private const DEFAULT_DECISION_MODEL = '';
+	private const MODELS_CACHE_TTL       = HOUR_IN_SECONDS;
 
 	/**
 	 * Initializes settings hooks.
@@ -109,6 +111,15 @@ class OpenAiCompatibleSettings {
 			self::SECTION_ID,
 			[ 'label_for' => self::OPTION_NAME . '-speech-model' ]
 		);
+
+		add_settings_field(
+			self::OPTION_NAME . '_decision_model',
+			__( 'Default Decision Model', 'ai-provider-for-universal-openai-api' ),
+			[ $this, 'render_decision_model_field' ],
+			self::PAGE_SLUG,
+			self::SECTION_ID,
+			[ 'label_for' => self::OPTION_NAME . '-decision-model' ]
+		);
 	}
 
 	/**
@@ -165,21 +176,25 @@ class OpenAiCompatibleSettings {
 		}
 		$endpoint_url = rtrim( $endpoint_url, '/' );
 
-		$text_model   = isset( $value[ self::KEY_TEXT_MODEL ] )
+		$text_model     = isset( $value[ self::KEY_TEXT_MODEL ] )
 			? sanitize_text_field( trim( (string) $value[ self::KEY_TEXT_MODEL ] ) )
 			: self::DEFAULT_TEXT_MODEL;
-		$image_model  = isset( $value[ self::KEY_IMAGE_MODEL ] )
+		$image_model    = isset( $value[ self::KEY_IMAGE_MODEL ] )
 			? sanitize_text_field( trim( (string) $value[ self::KEY_IMAGE_MODEL ] ) )
 			: self::DEFAULT_IMAGE_MODEL;
-		$speech_model = isset( $value[ self::KEY_SPEECH_MODEL ] )
+		$speech_model   = isset( $value[ self::KEY_SPEECH_MODEL ] )
 			? sanitize_text_field( trim( (string) $value[ self::KEY_SPEECH_MODEL ] ) )
 			: self::DEFAULT_SPEECH_MODEL;
+		$decision_model = isset( $value[ self::KEY_DECISION_MODEL ] )
+			? sanitize_text_field( trim( (string) $value[ self::KEY_DECISION_MODEL ] ) )
+			: self::DEFAULT_DECISION_MODEL;
 
 		return [
-			self::KEY_ENDPOINT_URL => $endpoint_url,
-			self::KEY_TEXT_MODEL   => $text_model,
-			self::KEY_IMAGE_MODEL  => $image_model,
-			self::KEY_SPEECH_MODEL => $speech_model,
+			self::KEY_ENDPOINT_URL   => $endpoint_url,
+			self::KEY_TEXT_MODEL     => $text_model,
+			self::KEY_IMAGE_MODEL    => $image_model,
+			self::KEY_SPEECH_MODEL   => $speech_model,
+			self::KEY_DECISION_MODEL => $decision_model,
 		];
 	}
 
@@ -414,6 +429,29 @@ class OpenAiCompatibleSettings {
 	}
 
 	/**
+	 * Renders decision model dropdown.
+	 *
+	 * @since 1.2.0
+	 */
+	public function render_decision_model_field(): void {
+		$settings = self::get_settings();
+		$value    = (string) ( $settings[ self::KEY_DECISION_MODEL ] ?? '' );
+		$id       = self::OPTION_NAME . '-decision-model';
+		$name     = self::OPTION_NAME . '[' . self::KEY_DECISION_MODEL . ']';
+		?>
+		<div class="openai-compatible-model-select-wrapper">
+			<select id="<?php echo esc_attr( $id ); ?>" name="<?php echo esc_attr( $name ); ?>" class="regular-text">
+				<option value="<?php echo esc_attr( $value ); ?>"><?php echo esc_html( $value ); ?></option>
+			</select>
+			<span id="openai-compatible-decision-model-status" class="openai-compatible-model-status"></span>
+		</div>
+		<p class="description">
+			<?php esc_html_e( 'Optional override. Leave as "Use AI Client default" to let WordPress AI Client choose.', 'ai-provider-for-universal-openai-api' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
 	 * Enqueues settings page JavaScript.
 	 *
 	 * @since 1.0.0
@@ -449,7 +487,7 @@ class OpenAiCompatibleSettings {
 		wp_style_add_data( 'ai-provider-for-universal-openai-api-settings', 'rtl', 'replace' );
 
 		$settings_data = [
-			'ajaxUrl'             => esc_url_raw(
+			'ajaxUrl'               => esc_url_raw(
 				add_query_arg(
 					[
 						'action'   => self::AJAX_ACTION_MODELS,
@@ -458,10 +496,11 @@ class OpenAiCompatibleSettings {
 					admin_url( 'admin-ajax.php' )
 				)
 			),
-			'selectedTextModel'   => self::get_selected_text_model(),
-			'selectedImageModel'  => self::get_selected_image_model(),
-			'selectedSpeechModel' => self::get_selected_speech_model(),
-			'i18n'                => [
+			'selectedTextModel'     => self::get_selected_text_model(),
+			'selectedImageModel'    => self::get_selected_image_model(),
+			'selectedSpeechModel'   => self::get_selected_speech_model(),
+			'selectedDecisionModel' => self::get_selected_decision_model(),
+			'i18n'                  => [
 				'loading'         => __( 'Loading models…', 'ai-provider-for-universal-openai-api' ),
 				'loaded'          => __( 'models loaded.', 'ai-provider-for-universal-openai-api' ),
 				'errorLoad'       => __( 'Could not load models from endpoint.', 'ai-provider-for-universal-openai-api' ),
@@ -567,43 +606,7 @@ class OpenAiCompatibleSettings {
 		$models = array_values(
 			array_filter(
 				array_map(
-					static function ( $model ) {
-						if ( ! is_array( $model ) ) {
-							return null;
-						}
-
-						$type = isset( $model['type'] ) ? strtolower( trim( (string) $model['type'] ) ) : '';
-						if ( 'embedding' === $type ) {
-							return null;
-						}
-
-						$id = '';
-						if ( isset( $model['id'] ) && '' !== trim( (string) $model['id'] ) ) {
-							$id = trim( (string) $model['id'] );
-						} elseif ( isset( $model['key'] ) && '' !== trim( (string) $model['key'] ) ) {
-							$id = trim( (string) $model['key'] );
-						} elseif ( isset( $model['selected_variant'] ) && '' !== trim( (string) $model['selected_variant'] ) ) {
-							$id = trim( (string) $model['selected_variant'] );
-						}
-
-						if ( '' === $id ) {
-							return null;
-						}
-
-						$name = $id;
-						if ( isset( $model['name'] ) && '' !== trim( (string) $model['name'] ) ) {
-							$name = trim( (string) $model['name'] );
-						} elseif ( isset( $model['display_name'] ) && '' !== trim( (string) $model['display_name'] ) ) {
-							$name = trim( (string) $model['display_name'] );
-						}
-
-						return [
-							'id'        => $id,
-							'name'      => $name,
-							'is_image'  => self::is_likely_image_model( $id ),
-							'is_speech' => self::is_likely_speech_model( $id ),
-						];
-					},
+					[ self::class, 'format_model_entry' ],
 					$raw_models
 				)
 			)
@@ -639,7 +642,16 @@ class OpenAiCompatibleSettings {
 		}
 
 		foreach ( self::fetch_all_models() as $model ) {
-			if ( ! self::is_likely_image_model( (string) $model['id'] ) && ! self::is_likely_speech_model( (string) $model['id'] ) ) {
+			if ( ! is_array( $model ) || empty( $model['id'] ) ) {
+				continue;
+			}
+			if ( isset( $model['is_text'] ) ) {
+				if ( $model['is_text'] ) {
+					return (string) $model['id'];
+				}
+				continue;
+			}
+			if ( ! self::is_likely_image_model( (string) $model['id'], $model ) && ! self::is_likely_speech_model( (string) $model['id'], $model ) && ! self::is_likely_decision_model( (string) $model['id'], $model ) ) {
 				return (string) $model['id'];
 			}
 		}
@@ -674,7 +686,10 @@ class OpenAiCompatibleSettings {
 		}
 
 		foreach ( self::fetch_all_models() as $model ) {
-			if ( self::is_likely_image_model( (string) $model['id'] ) ) {
+			if ( ! is_array( $model ) || empty( $model['id'] ) ) {
+				continue;
+			}
+			if ( ! empty( $model['is_image'] ) || self::is_likely_image_model( (string) $model['id'], $model ) ) {
 				return (string) $model['id'];
 			}
 		}
@@ -708,7 +723,47 @@ class OpenAiCompatibleSettings {
 		}
 
 		foreach ( self::fetch_all_models() as $model ) {
-			if ( self::is_likely_speech_model( (string) $model['id'] ) ) {
+			if ( ! is_array( $model ) || empty( $model['id'] ) ) {
+				continue;
+			}
+			if ( ! empty( $model['is_speech'] ) || self::is_likely_speech_model( (string) $model['id'], $model ) ) {
+				return (string) $model['id'];
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Returns selected decision model.
+	 *
+	 * @since 1.2.0
+	 */
+	public static function get_selected_decision_model(): string {
+		$settings = self::get_settings();
+		return trim( (string) ( $settings[ self::KEY_DECISION_MODEL ] ?? '' ) );
+	}
+
+	/**
+	 * Returns the effective decision model identifier.
+	 *
+	 * Returns the user-configured decision model when set. Otherwise fetches the
+	 * list of available models from the endpoint and returns the first model
+	 * that resembles a decision model, or an empty string if none is found.
+	 *
+	 * @since 1.2.0
+	 */
+	public static function get_effective_decision_model(): string {
+		$selected = self::get_selected_decision_model();
+		if ( '' !== $selected ) {
+			return $selected;
+		}
+
+		foreach ( self::fetch_all_models() as $model ) {
+			if ( ! is_array( $model ) || empty( $model['id'] ) ) {
+				continue;
+			}
+			if ( ! empty( $model['is_decision'] ) || self::is_likely_decision_model( (string) $model['id'], $model ) ) {
 				return (string) $model['id'];
 			}
 		}
@@ -775,10 +830,11 @@ class OpenAiCompatibleSettings {
 	 */
 	private static function get_default_settings(): array {
 		return [
-			self::KEY_ENDPOINT_URL => self::DEFAULT_ENDPOINT,
-			self::KEY_TEXT_MODEL   => self::DEFAULT_TEXT_MODEL,
-			self::KEY_IMAGE_MODEL  => self::DEFAULT_IMAGE_MODEL,
-			self::KEY_SPEECH_MODEL => self::DEFAULT_SPEECH_MODEL,
+			self::KEY_ENDPOINT_URL   => self::DEFAULT_ENDPOINT,
+			self::KEY_TEXT_MODEL     => self::DEFAULT_TEXT_MODEL,
+			self::KEY_IMAGE_MODEL    => self::DEFAULT_IMAGE_MODEL,
+			self::KEY_SPEECH_MODEL   => self::DEFAULT_SPEECH_MODEL,
+			self::KEY_DECISION_MODEL => self::DEFAULT_DECISION_MODEL,
 		];
 	}
 
@@ -870,43 +926,7 @@ class OpenAiCompatibleSettings {
 		$models = array_values(
 			array_filter(
 				array_map(
-					static function ( $model ) {
-						if ( ! is_array( $model ) ) {
-							return null;
-						}
-
-						$type = isset( $model['type'] ) ? strtolower( trim( (string) $model['type'] ) ) : '';
-						if ( 'embedding' === $type ) {
-							return null;
-						}
-
-						$id = '';
-						if ( isset( $model['id'] ) && '' !== trim( (string) $model['id'] ) ) {
-							$id = trim( (string) $model['id'] );
-						} elseif ( isset( $model['key'] ) && '' !== trim( (string) $model['key'] ) ) {
-							$id = trim( (string) $model['key'] );
-						} elseif ( isset( $model['selected_variant'] ) && '' !== trim( (string) $model['selected_variant'] ) ) {
-							$id = trim( (string) $model['selected_variant'] );
-						}
-
-						if ( '' === $id ) {
-							return null;
-						}
-
-						$name = $id;
-						if ( isset( $model['name'] ) && '' !== trim( (string) $model['name'] ) ) {
-							$name = trim( (string) $model['name'] );
-						} elseif ( isset( $model['display_name'] ) && '' !== trim( (string) $model['display_name'] ) ) {
-							$name = trim( (string) $model['display_name'] );
-						}
-
-						return [
-							'id'        => $id,
-							'name'      => $name,
-							'is_image'  => self::is_likely_image_model( $id ),
-							'is_speech' => self::is_likely_speech_model( $id ),
-						];
-					},
+					[ self::class, 'format_model_entry' ],
 					$raw_models
 				)
 			)
@@ -920,16 +940,159 @@ class OpenAiCompatibleSettings {
 	}
 
 	/**
-	 * Returns true if the model ID resembles an image-generation model.
+	 * Extracts output modalities array from raw model data if present.
 	 *
-	 * Uses keyword matching on the lowercased model identifier, similar to
-	 * how the Ollama provider detects image-generation models.
+	 * @param array<string, mixed> $model_data Raw model data.
+	 * @return list<string> List of output modalities in lowercase.
+	 */
+	private static function extract_output_modalities( array $model_data ): array {
+		$modalities = [];
+		if ( isset( $model_data['architecture']['output_modalities'] ) && is_array( $model_data['architecture']['output_modalities'] ) ) {
+			$modalities = $model_data['architecture']['output_modalities'];
+		} elseif ( isset( $model_data['output_modalities'] ) && is_array( $model_data['output_modalities'] ) ) {
+			$modalities = $model_data['output_modalities'];
+		}
+
+		$normalized = [];
+		foreach ( $modalities as $mod ) {
+			if ( ! is_string( $mod ) || '' === trim( $mod ) ) {
+				continue;
+			}
+			$normalized[] = strtolower( trim( $mod ) );
+		}
+		return $normalized;
+	}
+
+	/**
+	 * Formats a raw model entry from an API response into a normalized model array.
+	 *
+	 * Inspects output modalities and endpoints (e.g. from OpenRouter) and applies
+	 * keyword heuristics as a fallback to categorize text, image, speech, and decision models.
+	 *
+	 * @since 1.2.0
+	 *
+	 * @param mixed $model Raw model data from API.
+	 * @return array{id: string, name: string, is_text: bool, is_image: bool, is_speech: bool, is_decision: bool}|null
+	 */
+	public static function format_model_entry( $model ): ?array {
+		if ( ! is_array( $model ) ) {
+			return null;
+		}
+
+		$type = isset( $model['type'] ) ? strtolower( trim( (string) $model['type'] ) ) : '';
+		if ( 'embedding' === $type ) {
+			return null;
+		}
+
+		$id = '';
+		if ( isset( $model['id'] ) && '' !== trim( (string) $model['id'] ) ) {
+			$id = trim( (string) $model['id'] );
+		} elseif ( isset( $model['key'] ) && '' !== trim( (string) $model['key'] ) ) {
+			$id = trim( (string) $model['key'] );
+		} elseif ( isset( $model['selected_variant'] ) && '' !== trim( (string) $model['selected_variant'] ) ) {
+			$id = trim( (string) $model['selected_variant'] );
+		}
+
+		if ( '' === $id ) {
+			return null;
+		}
+
+		$name = $id;
+		if ( isset( $model['name'] ) && '' !== trim( (string) $model['name'] ) ) {
+			$name = trim( (string) $model['name'] );
+		} elseif ( isset( $model['display_name'] ) && '' !== trim( (string) $model['display_name'] ) ) {
+			$name = trim( (string) $model['display_name'] );
+		}
+
+		$is_image    = self::is_likely_image_model( $id, $model );
+		$is_speech   = self::is_likely_speech_model( $id, $model );
+		$is_decision = self::is_likely_decision_model( $id, $model );
+		$is_text     = self::is_likely_text_model( $id, $model, $is_image, $is_speech );
+
+		return [
+			'id'          => $id,
+			'name'        => $name,
+			'is_text'     => $is_text,
+			'is_image'    => $is_image,
+			'is_speech'   => $is_speech,
+			'is_decision' => $is_decision,
+		];
+	}
+
+	/**
+	 * Returns true if the model is capable of generating text.
+	 *
+	 * Checks explicit output modalities and endpoints when available (e.g. OpenRouter).
+	 * Falls back to treating any model that is not exclusively an image or speech
+	 * model as a text generation model.
+	 *
+	 * @since 1.2.0
+	 *
+	 * @param string               $model_id   The model identifier.
+	 * @param array<string, mixed> $model_data Optional raw model data.
+	 * @param bool                 $is_image   Whether the model was identified as an image model.
+	 * @param bool                 $is_speech  Whether the model was identified as a speech model.
+	 * @return bool True if the model is a text model.
+	 */
+	public static function is_likely_text_model( string $model_id, array $model_data = [], bool $is_image = false, bool $is_speech = false ): bool {
+		$output_modalities = self::extract_output_modalities( $model_data );
+		if ( ! empty( $output_modalities ) ) {
+			return in_array( 'text', $output_modalities, true );
+		}
+
+		$endpoints = isset( $model_data['endpoints'] ) && is_array( $model_data['endpoints'] ) ? $model_data['endpoints'] : [];
+		if ( ! empty( $endpoints ) ) {
+			foreach ( [ '/api/v1/chat/completions', '/api/v1/completions', '/v1/chat/completions', '/v1/completions' ] as $endpoint ) {
+				if ( in_array( $endpoint, $endpoints, true ) ) {
+					return true;
+				}
+			}
+		}
+
+		$modality = isset( $model_data['architecture']['modality'] ) ? (string) $model_data['architecture']['modality'] : '';
+		if ( '' !== $modality ) {
+			if ( false !== strpos( $modality, '->text' ) || false !== strpos( $modality, '->text+' ) || false !== strpos( $modality, '+text' ) ) {
+				return true;
+			}
+		}
+
+		// Fallback for endpoints without modality metadata:
+		// Exclude pure image or speech models.
+		return ! ( $is_image || $is_speech );
+	}
+
+	/**
+	 * Returns true if the model ID or model data resembles an image-generation model.
+	 *
+	 * Uses output modalities/endpoints if available, falling back to keyword matching
+	 * on the lowercased model identifier.
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $model_id The model identifier to inspect.
+	 * @param string               $model_id   The model identifier to inspect.
+	 * @param array<string, mixed> $model_data Optional raw model data.
+	 * @return bool True if the model resembles an image model.
 	 */
-	private static function is_likely_image_model( string $model_id ): bool {
+	public static function is_likely_image_model( string $model_id, array $model_data = [] ): bool {
+		if ( ! empty( $model_data['is_image'] ) ) {
+			return true;
+		}
+
+		$output_modalities = self::extract_output_modalities( $model_data );
+		if ( ! empty( $output_modalities ) ) {
+			return in_array( 'image', $output_modalities, true );
+		}
+
+		$endpoints = isset( $model_data['endpoints'] ) && is_array( $model_data['endpoints'] ) ? $model_data['endpoints'] : [];
+		if ( in_array( '/api/v1/images', $endpoints, true ) || in_array( '/v1/images/generations', $endpoints, true ) ) {
+			return true;
+		}
+
+		$modality = isset( $model_data['architecture']['modality'] ) ? (string) $model_data['architecture']['modality'] : '';
+		if ( '' !== $modality && false !== strpos( $modality, '->image' ) ) {
+			return true;
+		}
+
 		$lower    = strtolower( $model_id );
 		$keywords = [
 			'dall-e',
@@ -954,9 +1117,13 @@ class OpenAiCompatibleSettings {
 			'-image',
 			'/image',
 			'image-',
+			'hy-world',
+			'hy-image',
+			'k3-edit',
+			'muse-image',
 		];
 		foreach ( $keywords as $keyword ) {
-			if ( str_contains( $lower, $keyword ) ) {
+			if ( false !== strpos( $lower, $keyword ) ) {
 				return true;
 			}
 		}
@@ -964,16 +1131,37 @@ class OpenAiCompatibleSettings {
 	}
 
 	/**
-	 * Returns true if the model ID resembles a text-to-speech model.
+	 * Returns true if the model ID or model data resembles a text-to-speech model.
 	 *
-	 * Uses keyword matching on the lowercased model identifier to detect
-	 * standard TTS models like tts-1, tts-1-hd, gpt-4o-mini-tts, or custom speech models.
+	 * Uses output modalities/endpoints if available, falling back to keyword matching
+	 * on the lowercased model identifier.
 	 *
 	 * @since 1.2.0
 	 *
-	 * @param string $model_id The model identifier to inspect.
+	 * @param string               $model_id   The model identifier to inspect.
+	 * @param array<string, mixed> $model_data Optional raw model data.
+	 * @return bool True if the model resembles a speech model.
 	 */
-	public static function is_likely_speech_model( string $model_id ): bool {
+	public static function is_likely_speech_model( string $model_id, array $model_data = [] ): bool {
+		if ( ! empty( $model_data['is_speech'] ) ) {
+			return true;
+		}
+
+		$output_modalities = self::extract_output_modalities( $model_data );
+		if ( ! empty( $output_modalities ) ) {
+			return in_array( 'speech', $output_modalities, true ) || in_array( 'audio', $output_modalities, true );
+		}
+
+		$endpoints = isset( $model_data['endpoints'] ) && is_array( $model_data['endpoints'] ) ? $model_data['endpoints'] : [];
+		if ( in_array( '/api/v1/audio/speech', $endpoints, true ) || in_array( '/v1/audio/speech', $endpoints, true ) ) {
+			return true;
+		}
+
+		$modality = isset( $model_data['architecture']['modality'] ) ? (string) $model_data['architecture']['modality'] : '';
+		if ( '' !== $modality && ( false !== strpos( $modality, '->speech' ) || false !== strpos( $modality, '->audio' ) ) ) {
+			return true;
+		}
+
 		$lower    = strtolower( $model_id );
 		$keywords = [
 			'tts-',
@@ -985,9 +1173,15 @@ class OpenAiCompatibleSettings {
 			'-speech',
 			'audio-speech',
 			'phonon',
+			'elevenlabs/',
+			'eleven-',
+			'speechify/',
+			'fish-audio/',
+			'heygen-voice',
+			'voxtral',
 		];
 		foreach ( $keywords as $keyword ) {
-			if ( str_contains( $lower, $keyword ) ) {
+			if ( false !== strpos( $lower, $keyword ) ) {
 				return true;
 			}
 		}
@@ -995,10 +1189,65 @@ class OpenAiCompatibleSettings {
 	}
 
 	/**
+	 * Returns true if the model ID or model data resembles a decision-making model.
+	 *
+	 * Uses output modalities/endpoints if available, falling back to keyword matching
+	 * on the lowercased model identifier.
+	 *
+	 * @since 1.2.0
+	 *
+	 * @param string               $model_id   The model identifier to inspect.
+	 * @param array<string, mixed> $model_data Optional raw model data.
+	 * @return bool True if the model resembles a decision model.
+	 */
+	public static function is_likely_decision_model( string $model_id, array $model_data = [] ): bool {
+		if ( ! empty( $model_data['is_decision'] ) ) {
+			return true;
+		}
+
+		$output_modalities = self::extract_output_modalities( $model_data );
+		if ( ! empty( $output_modalities ) ) {
+			if ( in_array( 'decisions', $output_modalities, true ) || in_array( 'decision', $output_modalities, true ) ) {
+				return true;
+			}
+		}
+
+		$endpoints = isset( $model_data['endpoints'] ) && is_array( $model_data['endpoints'] ) ? $model_data['endpoints'] : [];
+		if ( in_array( '/api/alpha/decisions', $endpoints, true ) ) {
+			return true;
+		}
+
+		$modality = isset( $model_data['architecture']['modality'] ) ? (string) $model_data['architecture']['modality'] : '';
+		if ( '' !== $modality && ( false !== strpos( $modality, '->decisions' ) || false !== strpos( $modality, '->decision' ) ) ) {
+			return true;
+		}
+
+		$lower    = strtolower( $model_id );
+		$patterns = [
+			'/(?:^|[\/_\.-])decision(?:[\/_\.-]|$)/',
+			'/(?:^|[\/_\.-])decider(?:[\/_\.-]|$)/',
+			'/(?:^|[\/_\.-])luna(?:[\/_\.-]|$)/',
+			'/(?:^|[\/_\.-])systemone(?:[\/_\.-]|$)/',
+			'/(?:^|[\/_\.-])nimble(?:[\/_\.-]|$)/',
+			'/(?:^|[\/_\.-])tev1(?:[\/_\.-]|$)/',
+		];
+
+		$is_decision = false;
+		foreach ( $patterns as $pattern ) {
+			if ( 1 === preg_match( $pattern, $lower ) ) {
+				$is_decision = true;
+				break;
+			}
+		}
+
+		return (bool) apply_filters( 'openai_compatible_is_likely_decision_model', $is_decision, $model_id );
+	}
+
+	/**
 	 * Filter the models list request URL for Universal OpenAI Connector.
 	 *
-	 * For GitHub Models (models.github.ai), route list request to /v1/models.
-	 * For OpenRouter (openrouter.ai), append output_modalities query parameter to fetch text, image, and speech models.
+	 * For OpenRouter (openrouter.ai), append output_modalities query parameter
+	 * to fetch text, image, speech, and decision models, and sort by pricing-low-to-high.
 	 *
 	 * @param string $models_url The default constructed models URL.
 	 * @param string $endpoint   The user-configured base endpoint URL.
@@ -1006,7 +1255,8 @@ class OpenAiCompatibleSettings {
 	 */
 	public function custom_ai_endpoint_models_url( $models_url, $endpoint ) {
 		if ( false !== strpos( $endpoint, 'openrouter.ai' ) || false !== strpos( $models_url, 'openrouter.ai' ) ) {
-			return add_query_arg( 'output_modalities', 'text,image,speech', $models_url );
+			$models_url = add_query_arg( 'order', 'pricing-low-to-high', $models_url );
+			return add_query_arg( 'output_modalities', 'text,image,speech,decisions', $models_url );
 		}
 
 		return $models_url;

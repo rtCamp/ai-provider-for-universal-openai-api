@@ -3,7 +3,7 @@ Contributors:      rtcamp, milindmore22, vishal4669, aishwarryapande, aviralmitt
 Tags:              ai, openai, llm, text-generation, image-generation, text-to-speech, speech-synthesis
 Requires at least: 7.0
 Tested up to:      7.0
-Stable tag:        1.1.0
+Stable tag:        1.2.0
 Requires PHP:      7.4
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
@@ -17,13 +17,13 @@ This plugin provides an [OpenAI-compatible](https://platform.openai.com/docs/api
 **Features:**
 
 * OpenAI-compatible provider registration for WordPress AI Client.
-* Configure the API endpoint URL, default text model, default image model, and default speech model from a single settings page (*Settings > AI Provider for Universal OpenAI API*).
+* Configure the API endpoint URL, default text model, default image model, default speech model, and default decision model from a single settings page (*Settings > AI Provider for Universal OpenAI API*).
 * API key managed through *Settings > Connectors* — no custom credential UI needed.
 * Automatic model discovery via the `/models` endpoint of the configured API (results cached for one hour).
 * Localhost and private-network endpoints fully supported for local AI servers.
 * Environment-variable overrides: `OPENAI_COMPATIBLE_BASE_URL` and `OPENAI_COMPATIBLE_API_KEY`.
 * Automatically strips parameters unsupported by non-OpenAI backends (`response_format`, `n`, `quality`, `style`, `reasoning_effort`).
-* Developer filters to customise request parameters for text, image, and speech generation.
+* Developer filters to customise request parameters for text, image, speech, and decision requests.
 * Extended timeout (300 s) for image generation to accommodate slow backends.
 
 **Text generation capabilities:**
@@ -46,6 +46,13 @@ This plugin provides an [OpenAI-compatible](https://platform.openai.com/docs/api
 * Output formats: MP3 (`audio/mpeg`), Opus (`audio/ogg`), WAV (`audio/wav`), FLAC (`audio/flac`), AAC (`audio/aac`).
 * Default voice: `alloy` (customizable via request options in AI Client).
 * Developer filter: `openai_compatible_tts_params`.
+
+**Decision-making capabilities:**
+
+* Fast, typed state evaluation and classification using the `/v1/decisions` endpoint.
+* Question types: predicate (boolean / probability), choice (options selection), score (ordered rubric rating).
+* Access via `OpenAiCompatibleProvider::decisionModel()`.
+* Developer filter: `openai_compatible_decision_params`.
 
 == Installation ==
 
@@ -107,6 +114,15 @@ Use the `openai_compatible_text_generation_params` filter for text generation or
 Generating images can take significant time on slow or self-hosted backends. The plugin extends the HTTP timeout to 300 seconds for image generation requests to accommodate this.
 
 == Changelog ==
+
+= 1.2.0 =
+
+* Feature: Implement decision-making capability via the `/v1/decisions` endpoint.
+* Feature: Added `OpenAiCompatibleProvider::decisionModel()` and `OpenAiCompatibleProvider::decisionModelIds()`.
+* Feature: Added typed decision DTOs: `DecisionQuestion`, `DecisionAnswer`, `DecisionResult`, and `DecisionTypeEnum`.
+* Feature: Support for predicate, choice, and score question types.
+* Feature: Default Decision Model admin dropdown with automatic discovery of decision-capable models.
+* Feature: Developer filters `ai_provider_for_universal_openai_api_decision_params` and `openai_compatible_decision_params`.
 
 = 1.1.0 =
 

@@ -1,6 +1,6 @@
 {
     "name": "rtcamp/ai-provider-for-universal-openai-api",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "AI Provider for Universal OpenAI API for the PHP AI Client SDK. Works as both a Composer package and WordPress plugin.",
     "license": "GPL-2.0-or-later",
     "keywords": [
