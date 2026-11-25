@@ -2,12 +2,21 @@
 
 ## 1.2.0
 
+- Added text-to-speech capability via the `/v1/audio/speech` endpoint.
+- Added `OpenAiCompatibleTextToSpeechConversionModel` supporting standard speech models and audio formats (MP3, Opus, WAV, FLAC, AAC).
+- Added Default Text-to-Speech Model admin dropdown with automatic discovery of speech-capable models.
+- Added developer filters `ai_provider_for_universal_openai_api_tts_params` and `openai_compatible_tts_params`.
 - Added decision-making capability via the `/v1/decisions` endpoint.
 - Added `OpenAiCompatibleProvider::decisionModel()` and `OpenAiCompatibleProvider::decisionModelIds()`.
 - Added typed decision DTOs: `DecisionQuestion`, `DecisionAnswer`, `DecisionResult`, and `DecisionTypeEnum`.
 - Added support for predicate, choice, and score question types.
 - Added Default Decision Model setting and admin dropdown with automatic discovery of decision-capable models.
 - Added developer filters `ai_provider_for_universal_openai_api_decision_params` and `openai_compatible_decision_params`.
+- Added custom models URL filters for OpenRouter and GitHub endpoints.
+- Rebranded plugin, namespace, hooks, and text domain to AI Provider for Universal OpenAI API with backwards compatibility.
+- Enhanced HTTP request filtering for custom ports, LAN hosts, and preview endpoints.
+- Improved URL sanitization and safe remote requests in settings.
+- Updated dependencies and development tools.
 
 ## 1.1.0
 
