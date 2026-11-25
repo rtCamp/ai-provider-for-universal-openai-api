@@ -204,7 +204,7 @@ class OpenAiCompatibleProvider extends AbstractApiProvider {
 				continue;
 			}
 			$model_id = (string) $model['id'];
-			if ( ! OpenAiCompatibleSettings::is_likely_decision_model( $model_id ) ) {
+			if ( empty( $model['is_decision'] ) && ! OpenAiCompatibleSettings::is_likely_decision_model( $model_id, $model ) ) {
 				continue;
 			}
 

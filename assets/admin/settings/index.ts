@@ -32,6 +32,7 @@ declare global {
 interface OpenAiCompatibleModel {
 	id?: string;
 	name?: string;
+	is_text?: boolean;
 	is_image?: boolean;
 	is_speech?: boolean;
 	is_decision?: boolean;
@@ -497,9 +498,16 @@ function init(): void {
 				}
 
 				// Filter models for text, image, speech, and decision SELECT elements.
-				// Text models exclude image and speech models, but include decision-capable models
-				// since models like gpt-4o-mini can handle both text chat and decisions.
-				const textModels = payload.data.filter( ( model ) => model && ! model.is_image && ! model.is_speech );
+				// Text models use is_text flag when present, or exclude image and speech models.
+				const textModels = payload.data.filter( ( model ) => {
+					if ( ! model ) {
+						return false;
+					}
+					if ( typeof model.is_text === 'boolean' ) {
+						return model.is_text;
+					}
+					return ! model.is_image && ! model.is_speech;
+				} );
 				const imageModels = payload.data.filter( ( model ) => model && model.is_image );
 				const speechModels = payload.data.filter( ( model ) => model && model.is_speech );
 				const decisionModels = payload.data.filter( ( model ) => model && model.is_decision );
