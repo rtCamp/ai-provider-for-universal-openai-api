@@ -1,14 +1,14 @@
 # AI Provider for Universal OpenAI API - Connect Any OpenAI-Compatible API to WordPress
 
-**Contributors:** [rtCamp](https://profiles.wordpress.org/rtcamp/), [milindmore22](https://profiles.wordpress.org/milindmore22), [vishal4669](https://profiles.wordpress.org/vishal4669/), [aviralmittal89](https://profiles.wordpress.org/aviralmittal89/)
+**Contributors:** [rtCamp](https://profiles.wordpress.org/rtcamp/), [milindmore22](https://profiles.wordpress.org/milindmore22), [vishal4669](https://profiles.wordpress.org/vishal4669/), [aishwarryapande](https://profiles.wordpress.org/aishwarryapande/), [aviralmittal89](https://profiles.wordpress.org/aviralmittal89/)
 
-**Tags:** WordPress, AI, OpenAI, LLM, Text Generation, Image Generation, Self-hosted, Local AI, Ollama, Groq
+**Tags:** WordPress, AI, OpenAI, LLM, Text Generation, Image Generation, Text-to-Speech, Speech Synthesis, Decision Making, Self-hosted, Local AI, Ollama, Groq
 
 This plugin is licensed under the GPL v2 or later.
 
 ## Overview
 
-AI Provider for Universal OpenAI API registers an `openai_compatible` provider with the WordPress AI Client so that **any OpenAI-compatible API** can power AI features across WordPress — text generation, chat, and image generation included.
+AI Provider for Universal OpenAI API registers an `openai_compatible` provider with the WordPress AI Client so that **any OpenAI-compatible API** can power AI features across WordPress — text generation, chat, image generation, speech synthesis, and decision-making included.
 
 ## Description
 
@@ -42,6 +42,8 @@ Many teams need the flexibility to swap AI providers without being locked into a
 - **Cost control:** Route requests to cheaper or self-hosted models as needed
 - **Vision support:** Use multimodal models for image + text prompts
 - **Image generation:** Full support for text-to-image models
+- **Text-to-speech:** Full support for speech synthesis using standard OpenAI-compatible audio models
+- **Decision-making:** Fast typed evaluations and classifications via the `/v1/decisions` endpoint
 - **Simple setup:** Enter an endpoint URL and API key to start generating
 
 ### API Integration
@@ -93,6 +95,8 @@ Navigate to **Settings → AI Provider for Universal OpenAI API**:
 * **API Endpoint URL:** The base URL of your OpenAI-compatible service (defaults to `https://api.openai.com/v1`). Supports presets or custom URLs.
 * **Default Text Model:** Select the default model used for text generation. Populated dynamically from your endpoint.
 * **Default Image Model:** Select the default model used for image generation. Populated dynamically from your endpoint.
+* **Default Text-to-Speech Model:** Select the default model used for speech synthesis. Populated dynamically from your endpoint.
+* **Default Decision Model:** Select the default model used for decision-making and content evaluation. Populated dynamically from your endpoint.
 
 ### API Key
 
@@ -152,70 +156,23 @@ You can use AI Provider for Universal OpenAI API's vision capabilities in any Wo
 - Alt text generation
 - Image captioning / analysis
 
-### Environment Overrides
+### Text-to-Speech (Audio Synthesis)
 
-For advanced deployments, override defaults using environment variables:
-
-| Variable | Description |
-|---|---|
-| `OPENAI_COMPATIBLE_BASE_URL` | Override the API endpoint URL |
-| `OPENAI_COMPATIBLE_API_KEY` | Override the API key |
-
-Environment variables take priority over database-stored settings.
-
-## Developer Filters
-
-### `ai_provider_for_universal_openai_api_models_url`
-
-Filter the resolved URL used to fetch available models:
+Synthesize speech audio from text prompts using the `/v1/audio/speech` endpoint:
 
 ```php
-add_filter( 'ai_provider_for_universal_openai_api_models_url', function ( string $url, string $endpoint ): string {
-    return $url;
-}, 10, 2 );
+use WordPress\AiClient\AiClient;
+
+$audio_file = AiClient::prompt( 'The quick brown fox jumps over the lazy dog.' )
+    ->usingProvider( 'openai_compatible' )
+    ->convertTextToSpeech();
+
+// Retrieve synthesized audio file data:
+$audio_bytes = base64_decode( $audio_file->getBase64Data() );
+$mime_type   = $audio_file->getMimeType(); // e.g. 'audio/mpeg'
 ```
 
-### `ai_provider_for_universal_openai_api_url`
-
-Filter the endpoint URL for any request path:
-
-```php
-add_filter( 'ai_provider_for_universal_openai_api_url', function ( string $url, string $path, string $base_url ): string {
-    return $url;
-}, 10, 3 );
-```
-
-### `openai_compatible_text_generation_params`
-
-Called before sending a text-generation request. Receives and must return the full parameters array.
-
-```php
-add_filter( 'openai_compatible_text_generation_params', function ( array $params ): array {
-    $params['temperature'] = 0.2;
-    return $params;
-} );
-```
-
-### `openai_compatible_image_generation_params`
-
-Called before sending an image-generation request. Receives and must return the full parameters array.
-
-```php
-add_filter( 'openai_compatible_image_generation_params', function ( array $params ): array {
-    $params['size'] = '1024x1024';
-    return $params;
-} );
-```
-
-### `openai_compatible_decision_params`
-
-Called before sending a decision-making request to `/v1/decisions`. Receives and must return the full parameters array.
-
-```php
-add_filter( 'openai_compatible_decision_params', function ( array $params ): array {
-    return $params;
-} );
-```
+Supported audio formats: MP3 (`audio/mpeg`), Opus (`audio/ogg`), WAV (`audio/wav`), FLAC (`audio/flac`), AAC (`audio/aac`).
 
 ### Decision Making
 
@@ -252,6 +209,113 @@ $result = $model->decide( $incoming_message, $questions );
 $is_urgent   = $result->getAnswer( 'is_urgent' )->getProbability() > 0.8;
 $department  = $result->getAnswer( 'department' )->getChoice();
 $frustration = $result->getAnswer( 'frustration' )->getScore();
+```
+
+### Environment Overrides
+
+For advanced deployments, override defaults using environment variables:
+
+| Variable | Description |
+|---|---|
+| `OPENAI_COMPATIBLE_BASE_URL` | Override the API endpoint URL |
+| `OPENAI_COMPATIBLE_API_KEY` | Override the API key |
+
+Environment variables take priority over database-stored settings.
+
+## Developer Filters
+
+### `ai_provider_for_universal_openai_api_models_url`
+
+Filter the resolved URL used to fetch available models (with backwards-compatible `universal_openai_connector_models_url` fallback):
+
+```php
+add_filter( 'ai_provider_for_universal_openai_api_models_url', function ( string $url, string $endpoint ): string {
+    return $url;
+}, 10, 2 );
+```
+
+### `ai_provider_for_universal_openai_api_url`
+
+Filter the endpoint URL for any request path (with backwards-compatible `universal_openai_connector_url` fallback):
+
+```php
+add_filter( 'ai_provider_for_universal_openai_api_url', function ( string $url, string $path, string $base_url ): string {
+    return $url;
+}, 10, 3 );
+```
+
+### `ai_provider_for_universal_openai_api_endpoints`
+
+Filter or register custom preset endpoints in the admin dropdown:
+
+```php
+add_filter( 'ai_provider_for_universal_openai_api_endpoints', function ( array $endpoints ): array {
+    $endpoints['Custom Server'] = 'https://ai.example.com/v1';
+    return $endpoints;
+} );
+```
+
+### `openai_compatible_text_generation_params`
+
+Called before sending a text-generation request. Receives and must return the full parameters array.
+
+```php
+add_filter( 'openai_compatible_text_generation_params', function ( array $params ): array {
+    $params['temperature'] = 0.2;
+    return $params;
+} );
+```
+
+### `openai_compatible_image_generation_params`
+
+Called before sending an image-generation request. Receives and must return the full parameters array.
+
+```php
+add_filter( 'openai_compatible_image_generation_params', function ( array $params ): array {
+    $params['size'] = '1024x1024';
+    return $params;
+} );
+```
+
+### `ai_provider_for_universal_openai_api_tts_params`
+
+Called before sending a text-to-speech request to `/v1/audio/speech`. Also supports `openai_compatible_tts_params`.
+
+```php
+add_filter( 'ai_provider_for_universal_openai_api_tts_params', function ( array $params ): array {
+    $params['speed'] = 1.0;
+    return $params;
+} );
+```
+
+### `ai_provider_for_universal_openai_api_decision_params`
+
+Called before sending a decision-making request to `/v1/decisions`. Also supports `openai_compatible_decision_params`.
+
+```php
+add_filter( 'ai_provider_for_universal_openai_api_decision_params', function ( array $params ): array {
+    return $params;
+} );
+```
+
+### `openai_compatible_is_likely_decision_model`
+
+Filter whether a given model ID should be treated as decision-capable in admin dropdowns:
+
+```php
+add_filter( 'openai_compatible_is_likely_decision_model', function ( bool $is_decision, string $model_id ): bool {
+    return $is_decision;
+}, 10, 2 );
+```
+
+### `openai_compatible_decision_models`
+
+Filter the array of detected decision model IDs:
+
+```php
+add_filter( 'openai_compatible_decision_models', function ( array $decision_models ): array {
+    return $decision_models;
+} );
 ```
 
 ### Non-OpenAI backend compatibility
@@ -320,6 +384,14 @@ Yes. When a model supports vision capabilities, the plugin automatically uses th
 ### Can this plugin generate images?
 
 Yes. Any endpoint that implements `/v1/images/generations` is supported. Configure the **Default Image Model** in settings to a model that supports image generation (e.g. `dall-e-3` for OpenAI).
+
+### Can this plugin synthesize speech (Text-to-Speech)?
+
+Yes. Any endpoint that implements `/v1/audio/speech` is supported. Configure the **Default Text-to-Speech Model** in settings (e.g. `tts-1`, `tts-1-hd`, or custom speech models). Supported formats include MP3, Opus, WAV, FLAC, and AAC.
+
+### Can this plugin evaluate decisions and classifications?
+
+Yes. Any endpoint that implements the `/v1/decisions` endpoint is supported. Configure the **Default Decision Model** in settings and evaluate content with typed questions (predicate, choice, score) using `OpenAiCompatibleProvider::decisionModel()`.
 
 ### Can I change the API endpoint?
 

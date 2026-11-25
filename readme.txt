@@ -1,6 +1,6 @@
 === AI Provider for Universal OpenAI API ===
 Contributors:      rtcamp, milindmore22, vishal4669, aishwarryapande, aviralmittal89
-Tags:              ai, openai, llm, text-generation, image-generation, text-to-speech, speech-synthesis
+Tags:              ai, openai, llm, text-generation, image-generation, text-to-speech, speech-synthesis, decisions, classification
 Requires at least: 7.0
 Tested up to:      7.0
 Stable tag:        1.2.0
@@ -8,7 +8,7 @@ Requires PHP:      7.4
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
-OpenAI-compatible provider for the WordPress AI Client with a configurable endpoint and default text, image, and text-to-speech models.
+OpenAI-compatible provider for the WordPress AI Client with a configurable endpoint and default text, image, text-to-speech, and decision models.
 
 == Description ==
 
@@ -61,13 +61,13 @@ This plugin provides an [OpenAI-compatible](https://platform.openai.com/docs/api
 3. Activate **AI Provider for Universal OpenAI API** through the Plugins menu in WordPress.
 4. Go to *Settings > Connectors* and enter your API key for the **AI Provider for Universal OpenAI API** provider.
 5. Go to *Settings > AI Provider for Universal OpenAI API* and set your **API Endpoint URL** (defaults to `https://api.openai.com/v1`).
-6. Optionally pick a **Default Text Model** and **Default Image Model** from the automatically-populated dropdowns.
+6. Optionally pick a **Default Text Model**, **Default Image Model**, **Default Text-to-Speech Model**, and **Default Decision Model** from the automatically-populated dropdowns.
 7. Save the settings.
 
 == Screenshots ==
 
 1. AI Provider for Universal OpenAI API provider in Connectors page showing connection status and API key field.
-2. Settings page showing API endpoint URL, default text model, and default image model dropdowns.
+2. Settings page showing API endpoint URL and default model dropdowns for text, image, speech, and decisions.
 3. Example of generating post excerpt using OpenRouter in the WordPress editor.
 4. Example of generating an image using OpenRouter in the WordPress editor.
 
@@ -101,13 +101,27 @@ Yes. When a model supports vision capabilities, the plugin automatically uses th
 
 Yes. Any endpoint that implements `/v1/images/generations` is supported. Configure the **Default Image Model** in settings to a model that supports image generation (e.g. `dall-e-3` for OpenAI).
 
+= Can this plugin synthesize speech (Text-to-Speech)? =
+
+Yes. Any endpoint that implements `/v1/audio/speech` is supported. Configure the **Default Text-to-Speech Model** in settings (e.g. `tts-1`, `tts-1-hd`, or custom speech models). Supports MP3, Opus, WAV, FLAC, and AAC formats.
+
+= Can this plugin evaluate decisions and classifications? =
+
+Yes. Any endpoint that implements the `/v1/decisions` endpoint is supported. Configure the **Default Decision Model** in settings and evaluate content with typed questions (predicate, choice, score) using `OpenAiCompatibleProvider::decisionModel()`.
+
 = Why are some OpenAI parameters removed for non-OpenAI endpoints? =
 
 Many strict OpenAI-compatible backends reject parameters they do not recognise (`response_format`, `n`, `quality`, `style`, `reasoning_effort`). The plugin strips these automatically when the endpoint URL does not contain `api.openai.com`. You can re-add them via the developer filters.
 
 = How can I customise the parameters sent to the API? =
 
-Use the `openai_compatible_text_generation_params` filter for text generation or the `openai_compatible_image_generation_params` filter for image generation. Both filters receive and must return the full parameters array.
+Use the developer filters:
+* Text generation: `openai_compatible_text_generation_params`
+* Image generation: `openai_compatible_image_generation_params`
+* Text-to-speech: `ai_provider_for_universal_openai_api_tts_params` and `openai_compatible_tts_params`
+* Decisions: `ai_provider_for_universal_openai_api_decision_params` and `openai_compatible_decision_params`
+
+Each filter receives and must return the parameters array.
 
 = Why does image generation sometimes time out? =
 
@@ -122,7 +136,16 @@ Generating images can take significant time on slow or self-hosted backends. The
 * Feature: Added typed decision DTOs: `DecisionQuestion`, `DecisionAnswer`, `DecisionResult`, and `DecisionTypeEnum`.
 * Feature: Support for predicate, choice, and score question types.
 * Feature: Default Decision Model admin dropdown with automatic discovery of decision-capable models.
+* Feature: Implement text-to-speech capability via the `/v1/audio/speech` endpoint.
+* Feature: Added `OpenAiCompatibleTextToSpeechConversionModel` supporting standard speech models and audio formats (MP3, Opus, WAV, FLAC, AAC).
+* Feature: Default Text-to-Speech Model admin dropdown with automatic discovery of speech-capable models.
+* Feature: Developer filters `ai_provider_for_universal_openai_api_tts_params` and `openai_compatible_tts_params`.
 * Feature: Developer filters `ai_provider_for_universal_openai_api_decision_params` and `openai_compatible_decision_params`.
+* Feature: Add custom models URL filters for OpenRouter and GitHub endpoints.
+* Refactor: Rebrand plugin, namespace, hooks, and text domain to AI Provider for Universal OpenAI API with backwards compatibility.
+* Refactor: Enhance HTTP request filtering for custom ports, LAN hosts, and preview endpoints.
+* Fix: Improve URL sanitization and use safe remote requests in settings.
+* Fix: Update composer and npm dependencies.
 
 = 1.1.0 =
 
@@ -151,6 +174,10 @@ Generating images can take significant time on slow or self-hosted backends. The
 * Developer filters for customising text and image generation request parameters.
 
 == Upgrade Notice ==
+
+= 1.2.0 =
+
+Added Text-to-Speech synthesis, Decision-making API support, enhanced model discovery, and security improvements.
 
 = 1.1.0 =
 
