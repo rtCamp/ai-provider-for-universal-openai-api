@@ -237,7 +237,7 @@ class OpenAiCompatibleDecisionModel extends AbstractApiBasedModel {
 	private function extractRawAnswers( array $response_data ): ?array {
 		if ( isset( $response_data['answers'] ) && is_array( $response_data['answers'] ) ) {
 			// If answers is an associative map keyed by question name, return directly.
-			if ( ! array_is_list( $response_data['answers'] ) ) {
+			if ( ! $this->isArrayList( $response_data['answers'] ) ) {
 				return $response_data['answers'];
 			}
 
@@ -274,5 +274,27 @@ class OpenAiCompatibleDecisionModel extends AbstractApiBasedModel {
 		}
 
 		return $answers;
+	}
+
+	/**
+	 * Determines if an array is a zero-indexed list of sequential integers.
+	 *
+	 * Polyfill-safe replacement for PHP 8.1 array_is_list() to ensure PHP 7.4 compatibility.
+	 *
+	 * @since 1.2.0
+	 *
+	 * @param array<mixed> $arr The array to check.
+	 * @return bool True if list, false otherwise.
+	 */
+	private function isArrayList( array $arr ): bool {
+		if ( [] === $arr ) {
+			return true;
+		}
+
+		if ( function_exists( 'array_is_list' ) ) {
+			return array_is_list( $arr );
+		}
+
+		return array_keys( $arr ) === range( 0, count( $arr ) - 1 );
 	}
 }
