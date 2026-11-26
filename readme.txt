@@ -1,29 +1,29 @@
-=== Universal OpenAI Connector ===
+=== AI Provider for Universal OpenAI API ===
 Contributors:      rtcamp, milindmore22, vishal4669, aishwarryapande, aviralmittal89
-Tags:              ai, openai, llm, text-generation, image-generation
+Tags:              ai, openai, llm, text-generation, image-generation, text-to-speech, speech-synthesis, decisions, classification
 Requires at least: 7.0
 Tested up to:      7.0
-Stable tag:        1.1.0
+Stable tag:        1.2.0
 Requires PHP:      7.4
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
-OpenAI-compatible provider for the WordPress AI Client with a configurable endpoint and default text/image models.
+OpenAI-compatible provider for the WordPress AI Client with a configurable endpoint and default text, image, text-to-speech, and decision models.
 
 == Description ==
 
-This plugin provides an [OpenAI-compatible](https://platform.openai.com/docs/api-reference) integration for the [WordPress AI Client](https://wordpress.org/plugins/ai/). Point it at the official OpenAI API, a self-hosted Ollama instance, LM Studio, LocalAI, Mistral AI, Together AI, Groq, Fireworks AI, or any other service that speaks the OpenAI REST API format — text generation, chat, and image generation included.
+This plugin provides an [OpenAI-compatible](https://platform.openai.com/docs/api-reference) integration for the [WordPress AI Client](https://wordpress.org/plugins/ai/). Point it at the official OpenAI API, a self-hosted Ollama instance, LM Studio, LocalAI, Mistral AI, Together AI, Groq, Fireworks AI, or any other service that speaks the OpenAI REST API format — text generation, chat, image generation, and speech synthesis included.
 
 **Features:**
 
 * OpenAI-compatible provider registration for WordPress AI Client.
-* Configure the API endpoint URL, default text model, and default image model from a single settings page (*Settings > Universal OpenAI Connector*).
+* Configure the API endpoint URL, default text model, default image model, default speech model, and default decision model from a single settings page (*Settings > AI Provider for Universal OpenAI API*).
 * API key managed through *Settings > Connectors* — no custom credential UI needed.
 * Automatic model discovery via the `/models` endpoint of the configured API (results cached for one hour).
 * Localhost and private-network endpoints fully supported for local AI servers.
 * Environment-variable overrides: `OPENAI_COMPATIBLE_BASE_URL` and `OPENAI_COMPATIBLE_API_KEY`.
 * Automatically strips parameters unsupported by non-OpenAI backends (`response_format`, `n`, `quality`, `style`, `reasoning_effort`).
-* Developer filters to customise request parameters for text and image generation.
+* Developer filters to customise request parameters for text, image, speech, and decision requests.
 * Extended timeout (300 s) for image generation to accommodate slow backends.
 
 **Text generation capabilities:**
@@ -39,20 +39,35 @@ This plugin provides an [OpenAI-compatible](https://platform.openai.com/docs/api
 * Inline or remote file delivery.
 * Custom options passthrough.
 
+**Text-to-speech capabilities:**
+
+* Speech synthesis using the `/v1/audio/speech` endpoint.
+* Compatible with standard models (`tts-1`, `tts-1-hd`, `gpt-4o-mini-tts`) and third-party speech endpoints.
+* Output formats: MP3 (`audio/mpeg`), Opus (`audio/ogg`), WAV (`audio/wav`), FLAC (`audio/flac`), AAC (`audio/aac`).
+* Default voice: `alloy` (customizable via request options in AI Client).
+* Developer filter: `openai_compatible_tts_params`.
+
+**Decision-making capabilities:**
+
+* Fast, typed state evaluation and classification using the `/v1/decisions` endpoint.
+* Question types: predicate (boolean / probability), choice (options selection), score (ordered rubric rating).
+* Access via `OpenAiCompatibleProvider::decisionModel()`.
+* Developer filter: `openai_compatible_decision_params`.
+
 == Installation ==
 
 1. Ensure the WordPress AI plugin is installed and activated.
-2. Upload the `universal-openai-connector` folder to `/wp-content/plugins/`, or install it via the WordPress admin.
-3. Activate **Universal OpenAI Connector** through the Plugins menu in WordPress.
-4. Go to *Settings > Connectors* and enter your API key for the **Universal OpenAI Connector** provider.
-5. Go to *Settings > Universal OpenAI Connector* and set your **API Endpoint URL** (defaults to `https://api.openai.com/v1`).
-6. Optionally pick a **Default Text Model** and **Default Image Model** from the automatically-populated dropdowns.
+2. Upload the `ai-provider-for-universal-openai-api` folder to `/wp-content/plugins/`, or install it via the WordPress admin.
+3. Activate **AI Provider for Universal OpenAI API** through the Plugins menu in WordPress.
+4. Go to *Settings > Connectors* and enter your API key for the **AI Provider for Universal OpenAI API** provider.
+5. Go to *Settings > AI Provider for Universal OpenAI API* and set your **API Endpoint URL** (defaults to `https://api.openai.com/v1`).
+6. Optionally pick a **Default Text Model**, **Default Image Model**, **Default Text-to-Speech Model**, and **Default Decision Model** from the automatically-populated dropdowns.
 7. Save the settings.
 
 == Screenshots ==
 
-1. Universal OpenAI Connector provider in Connectors page showing connection status and API key field.
-2. Settings page showing API endpoint URL, default text model, and default image model dropdowns.
+1. AI Provider for Universal OpenAI API provider in Connectors page showing connection status and API key field.
+2. Settings page showing API endpoint URL and default model dropdowns for text, image, speech, and decisions.
 3. Example of generating post excerpt using OpenRouter in the WordPress editor.
 4. Example of generating an image using OpenRouter in the WordPress editor.
 
@@ -64,15 +79,15 @@ Any endpoint that implements the OpenAI REST API: the official OpenAI API, Ollam
 
 = Do I need an API key? =
 
-It depends on the service. The official OpenAI API requires an API key. Self-hosted services such as Ollama or LM Studio do not require authentication by default. If authentication is needed, enter your API key in *Settings > Connectors* for the **Universal OpenAI Connector** provider. For local servers that do not require a key, leave the field blank.
+It depends on the service. The official OpenAI API requires an API key. Self-hosted services such as Ollama or LM Studio do not require authentication by default. If authentication is needed, enter your API key in *Settings > Connectors* for the **AI Provider for Universal OpenAI API** provider. For local servers that do not require a key, leave the field blank.
 
 = What endpoint URL is used by default? =
 
-The default is `https://api.openai.com/v1`. You can change this in *Settings > Universal OpenAI Connector* or by setting the `OPENAI_COMPATIBLE_BASE_URL` environment variable.
+The default is `https://api.openai.com/v1`. You can change this in *Settings > AI Provider for Universal OpenAI API* or by setting the `OPENAI_COMPATIBLE_BASE_URL` environment variable.
 
 = Can I change the API endpoint? =
 
-Yes. Enter the full base URL in *Settings > Universal OpenAI Connector > API Endpoint URL*, or set the `OPENAI_COMPATIBLE_BASE_URL` environment variable. The environment variable takes priority over the admin setting.
+Yes. Enter the full base URL in *Settings > AI Provider for Universal OpenAI API > API Endpoint URL*, or set the `OPENAI_COMPATIBLE_BASE_URL` environment variable. The environment variable takes priority over the admin setting.
 
 = Can I use a local AI server running on localhost? =
 
@@ -86,13 +101,27 @@ Yes. When a model supports vision capabilities, the plugin automatically uses th
 
 Yes. Any endpoint that implements `/v1/images/generations` is supported. Configure the **Default Image Model** in settings to a model that supports image generation (e.g. `dall-e-3` for OpenAI).
 
+= Can this plugin synthesize speech (Text-to-Speech)? =
+
+Yes. Any endpoint that implements `/v1/audio/speech` is supported. Configure the **Default Text-to-Speech Model** in settings (e.g. `tts-1`, `tts-1-hd`, or custom speech models). Supports MP3, Opus, WAV, FLAC, and AAC formats.
+
+= Can this plugin evaluate decisions and classifications? =
+
+Yes. Any endpoint that implements the `/v1/decisions` endpoint is supported. Configure the **Default Decision Model** in settings and evaluate content with typed questions (predicate, choice, score) using `OpenAiCompatibleProvider::decisionModel()`.
+
 = Why are some OpenAI parameters removed for non-OpenAI endpoints? =
 
 Many strict OpenAI-compatible backends reject parameters they do not recognise (`response_format`, `n`, `quality`, `style`, `reasoning_effort`). The plugin strips these automatically when the endpoint URL does not contain `api.openai.com`. You can re-add them via the developer filters.
 
 = How can I customise the parameters sent to the API? =
 
-Use the `openai_compatible_text_generation_params` filter for text generation or the `openai_compatible_image_generation_params` filter for image generation. Both filters receive and must return the full parameters array.
+Use the developer filters:
+* Text generation: `openai_compatible_text_generation_params`
+* Image generation: `openai_compatible_image_generation_params`
+* Text-to-speech: `ai_provider_for_universal_openai_api_tts_params` and `openai_compatible_tts_params`
+* Decisions: `ai_provider_for_universal_openai_api_decision_params` and `openai_compatible_decision_params`
+
+Each filter receives and must return the parameters array.
 
 = Why does image generation sometimes time out? =
 
@@ -100,9 +129,27 @@ Generating images can take significant time on slow or self-hosted backends. The
 
 == Changelog ==
 
+= 1.2.0 =
+
+* Feature: Implement decision-making capability via the `/v1/decisions` endpoint.
+* Feature: Added `OpenAiCompatibleProvider::decisionModel()` and `OpenAiCompatibleProvider::decisionModelIds()`.
+* Feature: Added typed decision DTOs: `DecisionQuestion`, `DecisionAnswer`, `DecisionResult`, and `DecisionTypeEnum`.
+* Feature: Support for predicate, choice, and score question types.
+* Feature: Default Decision Model admin dropdown with automatic discovery of decision-capable models.
+* Feature: Implement text-to-speech capability via the `/v1/audio/speech` endpoint.
+* Feature: Added `OpenAiCompatibleTextToSpeechConversionModel` supporting standard speech models and audio formats (MP3, Opus, WAV, FLAC, AAC).
+* Feature: Default Text-to-Speech Model admin dropdown with automatic discovery of speech-capable models.
+* Feature: Developer filters `ai_provider_for_universal_openai_api_tts_params` and `openai_compatible_tts_params`.
+* Feature: Developer filters `ai_provider_for_universal_openai_api_decision_params` and `openai_compatible_decision_params`.
+* Feature: Add custom models URL filters for OpenRouter and GitHub endpoints.
+* Refactor: Rebrand plugin, namespace, hooks, and text domain to AI Provider for Universal OpenAI API with backwards compatibility.
+* Refactor: Enhance HTTP request filtering for custom ports, LAN hosts, and preview endpoints.
+* Fix: Improve URL sanitization and use safe remote requests in settings.
+* Fix: Update composer and npm dependencies.
+
 = 1.1.0 =
 
-* Feature: Add filters `universal_openai_connector_models_url` and `universal_openai_connector_url` for dynamic endpoint routing in OpenAI connector.
+* Feature: Add filters `ai_provider_for_universal_openai_api_models_url` and `ai_provider_for_universal_openai_api_url` for dynamic endpoint routing.
 * Feature: Add is_image flag to models and improve UI filtering.
 * Refactor: admin settings to TypeScript and modernize build configuration.
 * Refactor: settings UI with improved design and alignment.
@@ -117,7 +164,7 @@ Generating images can take significant time on slow or self-hosted backends. The
 
 = 1.0.0 =
 
-* Initial release of Universal OpenAI Connector.
+* Initial release as AI Provider for Universal OpenAI API (formerly Universal OpenAI Connector).
 * OpenAI-compatible REST API model discovery, text generation, and image generation support.
 * Multimodal (vision) input support for vision-capable models.
 * Admin settings page for API endpoint URL, default text model, and default image model.
@@ -127,6 +174,10 @@ Generating images can take significant time on slow or self-hosted backends. The
 * Developer filters for customising text and image generation request parameters.
 
 == Upgrade Notice ==
+
+= 1.2.0 =
+
+Added Text-to-Speech synthesis, Decision-making API support, enhanced model discovery, and security improvements.
 
 = 1.1.0 =
 

@@ -3,12 +3,12 @@
  * Provider availability for OpenAI compatible provider.
  *
  * @since 1.0.0
- * @package rtCamp\UniversalOpenAiConnector
+ * @package rtCamp\AIProviderUniversalOpenAI
  */
 
 declare( strict_types=1 );
 
-namespace rtCamp\UniversalOpenAiConnector\Provider;
+namespace rtCamp\AIProviderUniversalOpenAI\Provider;
 
 use WordPress\AiClient\Providers\Contracts\ProviderAvailabilityInterface;
 use WordPress\AiClient\Providers\Http\DTO\ApiKeyRequestAuthentication;

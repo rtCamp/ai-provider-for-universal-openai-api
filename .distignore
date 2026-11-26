@@ -64,5 +64,5 @@ desktop.ini
 /tests/_output
 
 # Generated archives
-/universal-openai-connector.zip
+/ai-provider-for-universal-openai-api.zip
 *.zip

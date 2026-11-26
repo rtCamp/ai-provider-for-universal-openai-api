@@ -3,19 +3,19 @@
  * Image generation model for OpenAI-compatible endpoints.
  *
  * @since 1.0.0
- * @package rtCamp\UniversalOpenAiConnector
+ * @package rtCamp\AIProviderUniversalOpenAI
  */
 
 declare( strict_types=1 );
 
-namespace rtCamp\UniversalOpenAiConnector\Models;
+namespace rtCamp\AIProviderUniversalOpenAI\Models;
 
 use WordPress\AiClient\Providers\Http\DTO\Request;
 use WordPress\AiClient\Providers\Http\DTO\RequestOptions;
 use WordPress\AiClient\Providers\Http\Enums\HttpMethodEnum;
 use WordPress\AiClient\Providers\OpenAiCompatibleImplementation\AbstractOpenAiCompatibleImageGenerationModel;
-use rtCamp\UniversalOpenAiConnector\Provider\OpenAiCompatibleProvider;
-use rtCamp\UniversalOpenAiConnector\Settings\OpenAiCompatibleSettings;
+use rtCamp\AIProviderUniversalOpenAI\Provider\OpenAiCompatibleProvider;
+use rtCamp\AIProviderUniversalOpenAI\Settings\OpenAiCompatibleSettings;
 
 /**
  * Class OpenAiCompatibleImageGenerationModel.

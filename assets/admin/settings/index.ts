@@ -1,5 +1,5 @@
 /**
- * Universal OpenAI Connector Settings Models Script
+ * AI Provider for Universal OpenAI API Settings Models Script
  *
  * This handles the loading of available models from the OpenAI Compatible endpoint
  * and populates selection choices dynamically in the WordPress admin panel.
@@ -8,10 +8,12 @@
 import './style.scss';
 
 // Type definitions to help TypeScript understand the data structures.
-interface UniversalOpenAiConnectorSettingsGlobal {
+interface AiProviderForUniversalOpenAiApiSettingsGlobal {
 	ajaxUrl?: string;
 	selectedTextModel?: string;
 	selectedImageModel?: string;
+	selectedSpeechModel?: string;
+	selectedDecisionModel?: string;
 	i18n?: {
 		loading?: string;
 		loaded?: string;
@@ -22,14 +24,18 @@ interface UniversalOpenAiConnectorSettingsGlobal {
 
 declare global {
 	interface Window {
-		universalOpenAiConnectorSettings?: UniversalOpenAiConnectorSettingsGlobal;
+		aiProviderForUniversalOpenAiApiSettings?: AiProviderForUniversalOpenAiApiSettingsGlobal;
+		universalOpenAiConnectorSettings?: AiProviderForUniversalOpenAiApiSettingsGlobal;
 	}
 }
 
 interface OpenAiCompatibleModel {
 	id?: string;
 	name?: string;
+	is_text?: boolean;
 	is_image?: boolean;
+	is_speech?: boolean;
+	is_decision?: boolean;
 }
 
 interface Preset {
@@ -38,7 +44,7 @@ interface Preset {
 }
 
 // Retrieve local settings and translations passed from PHP.
-const settings = window.universalOpenAiConnectorSettings || {};
+const settings = window.aiProviderForUniversalOpenAiApiSettings || window.universalOpenAiConnectorSettings || {};
 const i18n = settings.i18n || {};
 
 /**
@@ -168,15 +174,17 @@ function escHtml( str: string ): string {
  */
 function initEndpointPreset( onEndpointCommit?: ( url: string ) => void ): void {
 	const wrapper = document.getElementById( 'openai-compatible-endpoint-combobox' ) as HTMLDivElement | null;
-	const hiddenInput = document.getElementById( 'universal_openai_connector_settings-endpoint-url' ) as HTMLInputElement | null;
+	const hiddenInput = ( document.getElementById( 'ai_provider_for_universal_openai_api_settings-endpoint-url' ) ||
+		document.getElementById( 'universal_openai_connector_settings-endpoint-url' ) ) as HTMLInputElement | null;
 
 	// Return early if the required combobox wrapper elements are not present.
 	if ( ! wrapper || ! hiddenInput ) {
 		return;
 	}
 
-	const searchInput = document.getElementById( 'universal_openai_connector_settings-endpoint-url-search' ) as HTMLInputElement | null;
-	const list = wrapper.querySelector( 'ul[role="listbox"]' );
+	const searchInput = ( document.getElementById( 'ai_provider_for_universal_openai_api_settings-endpoint-url-search' ) ||
+		document.getElementById( 'universal_openai_connector_settings-endpoint-url-search' ) ) as HTMLInputElement | null;
+	const list = wrapper.querySelector<HTMLUListElement>( 'ul[role="listbox"]' );
 
 	if ( ! searchInput || ! list ) {
 		return;
@@ -206,7 +214,7 @@ function initEndpointPreset( onEndpointCommit?: ( url: string ) => void ): void 
 	// Parse the presets data attribute passed from PHP.
 	let presets: Preset[] = [];
 	try {
-		presets = JSON.parse( wrapper.dataset.presets || '[]' ) as Preset[];
+		presets = JSON.parse( wrapper.getAttribute( 'data-presets' ) || '[]' ) as Preset[];
 	} catch ( e ) {
 		presets = [];
 	}
@@ -248,7 +256,7 @@ function initEndpointPreset( onEndpointCommit?: ( url: string ) => void ): void 
 			li.setAttribute( 'role', 'option' );
 			li.setAttribute( 'aria-selected', 'false' );
 			li.id = `${ list.id }-opt-${ optIndex++ }`;
-			li.dataset.url = query;
+			li.setAttribute( 'data-url', query );
 			li.className = 'openai-compatible-endpoint-option openai-compatible-endpoint-option--custom';
 			li.innerHTML = `<em class="openai-compatible-endpoint-option-custom-label">Add &ldquo;${ escHtml( query ) }&rdquo;</em>`;
 			fragment.appendChild( li );
@@ -260,7 +268,7 @@ function initEndpointPreset( onEndpointCommit?: ( url: string ) => void ): void 
 			li.setAttribute( 'role', 'option' );
 			li.setAttribute( 'aria-selected', 'false' );
 			li.id = `${ list.id }-opt-${ optIndex++ }`;
-			li.dataset.url = p.url;
+			li.setAttribute( 'data-url', p.url );
 			li.className = 'openai-compatible-endpoint-option';
 			li.innerHTML =
 				`<strong class="openai-compatible-endpoint-option-label">${ highlight( p.label, query ) }</strong>` +
@@ -348,9 +356,10 @@ function initEndpointPreset( onEndpointCommit?: ( url: string ) => void ): void 
 		if ( ! target ) {
 			return;
 		}
-		const li = target.closest( 'li[data-url]' );
-		if ( li && li.dataset.url ) {
-			selectUrl( li.dataset.url );
+		const li = target.closest<HTMLLIElement>( 'li[data-url]' );
+		const url = li ? li.getAttribute( 'data-url' ) : null;
+		if ( url ) {
+			selectUrl( url );
 		}
 	} );
 
@@ -360,7 +369,7 @@ function initEndpointPreset( onEndpointCommit?: ( url: string ) => void ): void 
 		if ( ! target ) {
 			return;
 		}
-		const li = target.closest( 'li[data-url]' );
+		const li = target.closest<HTMLLIElement>( 'li[data-url]' );
 		if ( li ) {
 			highlightItem( li );
 		}
@@ -390,8 +399,9 @@ function initEndpointPreset( onEndpointCommit?: ( url: string ) => void ): void 
 		} else if ( e.key === 'Enter' ) {
 			e.preventDefault();
 			const highlighted = items[ activeIndex ];
-			if ( highlighted && highlighted.dataset.url ) {
-				selectUrl( highlighted.dataset.url );
+			const url = highlighted ? highlighted.getAttribute( 'data-url' ) : null;
+			if ( url ) {
+				selectUrl( url );
 			} else {
 				hiddenInput.value = searchInput.value;
 				closeList();
@@ -421,8 +431,14 @@ function initEndpointPreset( onEndpointCommit?: ( url: string ) => void ): void 
  * Main initialization function to fetch and populate model lists on page load.
  */
 function init(): void {
-	const textModelSelect = document.getElementById( 'universal_openai_connector_settings-text-model' ) as HTMLSelectElement | null;
-	const imageModelSelect = document.getElementById( 'universal_openai_connector_settings-image-model' ) as HTMLSelectElement | null;
+	const textModelSelect = ( document.getElementById( 'ai_provider_for_universal_openai_api_settings-text-model' ) ||
+		document.getElementById( 'universal_openai_connector_settings-text-model' ) ) as HTMLSelectElement | null;
+	const imageModelSelect = ( document.getElementById( 'ai_provider_for_universal_openai_api_settings-image-model' ) ||
+		document.getElementById( 'universal_openai_connector_settings-image-model' ) ) as HTMLSelectElement | null;
+	const speechModelSelect = ( document.getElementById( 'ai_provider_for_universal_openai_api_settings-speech-model' ) ||
+		document.getElementById( 'universal_openai_connector_settings-speech-model' ) ) as HTMLSelectElement | null;
+	const decisionModelSelect = ( document.getElementById( 'ai_provider_for_universal_openai_api_settings-decision-model' ) ||
+		document.getElementById( 'universal_openai_connector_settings-decision-model' ) ) as HTMLSelectElement | null;
 
 	if ( ! textModelSelect || ! imageModelSelect ) {
 		initEndpointPreset();
@@ -431,13 +447,15 @@ function init(): void {
 
 	const textStatus = document.getElementById( 'openai-compatible-text-model-status' );
 	const imageStatus = document.getElementById( 'openai-compatible-image-model-status' );
+	const speechStatus = document.getElementById( 'openai-compatible-speech-model-status' );
+	const decisionStatus = document.getElementById( 'openai-compatible-decision-model-status' );
 	const ajaxUrl = settings.ajaxUrl || '';
 
 	// Generation counter: each new fetch increments it so stale responses are discarded.
 	let fetchGeneration = 0;
 
 	/**
-	 * Fetches the model list and refreshes both SELECT elements.
+	 * Fetches the model list and refreshes all model SELECT elements.
 	 *
 	 * @param {string|null} overrideUrl Endpoint URL override, or null to use the saved setting. Pass '' to preview the default endpoint.
 	 */
@@ -446,10 +464,18 @@ function init(): void {
 
 		setStatus( textStatus, i18n.loading || 'Loading models...', false, 'loading' );
 		setStatus( imageStatus, i18n.loading || 'Loading models...', false, 'loading' );
+		if ( speechModelSelect ) {
+			setStatus( speechStatus, i18n.loading || 'Loading models...', false, 'loading' );
+		}
+		if ( decisionModelSelect ) {
+			setStatus( decisionStatus, i18n.loading || 'Loading models...', false, 'loading' );
+		}
 
 		// Capture current select values before the async response arrives.
 		const currentTextModel = textModelSelect.value;
 		const currentImageModel = imageModelSelect.value;
+		const currentSpeechModel = speechModelSelect ? speechModelSelect.value : '';
+		const currentDecisionModel = decisionModelSelect ? decisionModelSelect.value : '';
 
 		// POST so the optional endpoint_url body parameter reaches the AJAX handler.
 		// null means "no override"; any string (including '') is sent explicitly so PHP can
@@ -471,17 +497,40 @@ function init(): void {
 					throw new Error( i18n.errorLoad || 'Could not load models from endpoint.' );
 				}
 
-				// Filter models for text and image SELECT elements.
-				const textModels = payload.data.filter( ( model ) => model && ! model.is_image );
+				// Filter models for text, image, speech, and decision SELECT elements.
+				// Text models use is_text flag when present, or exclude image and speech models.
+				const textModels = payload.data.filter( ( model ) => {
+					if ( ! model ) {
+						return false;
+					}
+					if ( typeof model.is_text === 'boolean' ) {
+						return model.is_text;
+					}
+					return ! model.is_image && ! model.is_speech;
+				} );
 				const imageModels = payload.data.filter( ( model ) => model && model.is_image );
+				const speechModels = payload.data.filter( ( model ) => model && model.is_speech );
+				const decisionModels = payload.data.filter( ( model ) => model && model.is_decision );
 
 				// Populate SELECT elements, preserving the user's current selection.
 				clearAndFillSelect( textModelSelect, textModels, currentTextModel );
 				clearAndFillSelect( imageModelSelect, imageModels, currentImageModel );
+				if ( speechModelSelect ) {
+					clearAndFillSelect( speechModelSelect, speechModels, currentSpeechModel );
+				}
+				if ( decisionModelSelect ) {
+					clearAndFillSelect( decisionModelSelect, decisionModels.length > 0 ? decisionModels : payload.data, currentDecisionModel );
+				}
 
 				const loadedMsg = i18n.loaded || 'models loaded.';
 				setStatus( textStatus, `${ textModels.length } ${ loadedMsg }`, false, 'success' );
 				setStatus( imageStatus, `${ imageModels.length } ${ loadedMsg }`, false, 'success' );
+				if ( speechModelSelect ) {
+					setStatus( speechStatus, `${ speechModels.length } ${ loadedMsg }`, false, 'success' );
+				}
+				if ( decisionModelSelect ) {
+					setStatus( decisionStatus, `${ ( decisionModels.length > 0 ? decisionModels : payload.data ).length } ${ loadedMsg }`, false, 'success' );
+				}
 			} )
 			.catch( ( error: unknown ) => {
 				if ( gen !== fetchGeneration ) {
@@ -491,6 +540,12 @@ function init(): void {
 				const message = ( err && err.message ) ? err.message : ( i18n.errorLoad || 'Could not load models from endpoint.' );
 				setStatus( textStatus, message, true, 'error' );
 				setStatus( imageStatus, message, true, 'error' );
+				if ( speechModelSelect ) {
+					setStatus( speechStatus, message, true, 'error' );
+				}
+				if ( decisionModelSelect ) {
+					setStatus( decisionStatus, message, true, 'error' );
+				}
 			} );
 	};
 

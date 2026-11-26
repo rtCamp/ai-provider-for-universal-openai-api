@@ -53,12 +53,12 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
-          name: universal-openai-connector
-          path: universal-openai-connector.zip
+          name: ai-provider-for-universal-openai-api
+          path: ai-provider-for-universal-openai-api.zip
 
       - name: Upload release asset
         uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
         with:
-          files: universal-openai-connector.zip
+          files: ai-provider-for-universal-openai-api.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

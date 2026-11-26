@@ -1,29 +1,31 @@
-# Universal OpenAI Connector - Connect Any OpenAI-Compatible API to WordPress
+# AI Provider for Universal OpenAI API - Connect Any OpenAI-Compatible API to WordPress
 
-**Contributors:** [rtCamp](https://profiles.wordpress.org/rtcamp/), [milindmore22](https://profiles.wordpress.org/milindmore22), [vishal4669](https://profiles.wordpress.org/vishal4669/), [aviralmittal89](https://profiles.wordpress.org/aviralmittal89/)
+**Contributors:** [rtCamp](https://profiles.wordpress.org/rtcamp/), [milindmore22](https://profiles.wordpress.org/milindmore22), [vishal4669](https://profiles.wordpress.org/vishal4669/), [aishwarryapande](https://profiles.wordpress.org/aishwarryapande/), [aviralmittal89](https://profiles.wordpress.org/aviralmittal89/)
 
-**Tags:** WordPress, AI, OpenAI, LLM, Text Generation, Image Generation, Self-hosted, Local AI, Ollama, Groq
+**Tags:** WordPress, AI, OpenAI, LLM, Text Generation, Image Generation, Text-to-Speech, Speech Synthesis, Decision Making, Self-hosted, Local AI, Ollama, Groq
 
 This plugin is licensed under the GPL v2 or later.
 
 ## Overview
 
-Universal OpenAI Connector registers an `openai_compatible` provider with the WordPress AI Client so that **any OpenAI-compatible API** can power AI features across WordPress — text generation, chat, and image generation included.
+AI Provider for Universal OpenAI API registers an `openai_compatible` provider with the WordPress AI Client so that **any OpenAI-compatible API** can power AI features across WordPress — text generation, chat, image generation, speech synthesis, and decision-making included.
 
 ## Description
 
-**Universal OpenAI Connector** bridges the WordPress AI Client with any OpenAI-compatible REST API, allowing you to:
+**AI Provider for Universal OpenAI API** bridges the WordPress AI Client with any OpenAI-compatible REST API, allowing you to:
 
 * **Connect to any OpenAI-compatible endpoint** — official OpenAI, self-hosted, or third-party
 * **Generate text** using any LLM accessible through the configured endpoint
-* **Generate images** using models that support that supports images generations
-* **Configure default models** for text and image generation from WordPress admin settings
+* **Generate images** using models that support image generation
+* **Synthesize speech** using models that support text-to-speech conversion
+* **Make decisions and classifications** using models that support the `/v1/decisions` endpoint
+* **Configure default models** for text, image, speech, and decision generation from WordPress admin settings
 * **Discover available models** automatically from your configured endpoint
 * **Switch endpoints and models** without changing any code — just update your admin settings
 
 This makes it simple to integrate any OpenAI-compatible API into your WordPress site while keeping full control over which service and models you use.
 
-## Why Universal OpenAI Connector?
+## Why AI Provider for Universal OpenAI API?
 
 Many teams need the flexibility to swap AI providers without being locked into a single service — for cost, privacy, compliance, or feature reasons. This plugin handles that by:
 
@@ -40,6 +42,8 @@ Many teams need the flexibility to swap AI providers without being locked into a
 - **Cost control:** Route requests to cheaper or self-hosted models as needed
 - **Vision support:** Use multimodal models for image + text prompts
 - **Image generation:** Full support for text-to-image models
+- **Text-to-speech:** Full support for speech synthesis using standard OpenAI-compatible audio models
+- **Decision-making:** Fast typed evaluations and classifications via the `/v1/decisions` endpoint
 - **Simple setup:** Enter an endpoint URL and API key to start generating
 
 ### API Integration
@@ -51,6 +55,8 @@ The plugin communicates using the standard OpenAI REST API format:
 | `GET /v1/models` | Populate the model dropdowns in settings |
 | `POST /v1/chat/completions` | Text generation requests |
 | `POST /v1/images/generations` | Image generation requests |
+| `POST /v1/audio/speech` | Text-to-speech audio synthesis requests |
+| `POST /v1/decisions` | Typed decision-making and classification requests |
 
 ### Supported endpoints (examples)
 
@@ -64,138 +70,69 @@ The plugin communicates using the standard OpenAI REST API format:
 | Together AI | `https://api.together.xyz/v1` |
 | Groq | `https://api.groq.com/openai/v1` |
 | Fireworks AI | `https://api.fireworks.ai/inference/v1` |
-| Xiaomi AI | `https://api.ai.xiaomi.com/v1` |
+| OpenRouter | `https://openrouter.ai/api/v1` |
 
-Any service that implements the OpenAI REST API (`/v1/chat/completions`, `/v1/images/generations`, `/v1/models`) should work.
+## Requirements
 
-### Limitations
+* WordPress 7.0 or higher
+* PHP 7.4 or higher
+* [WordPress AI Client plugin](https://wordpress.org/plugins/ai/) (`ai`)
 
-- Only models registered through the configured endpoint are available; models from other providers are not mixed in.
-- When the endpoint is not `api.openai.com`, strict OpenAI-only parameters (`response_format`, `n`, `quality`, `style`, `reasoning_effort`) are stripped automatically to improve compatibility with non-OpenAI backends.
+## Installation
 
-## System Requirements
+1. Ensure the WordPress AI plugin is installed and activated.
+2. Upload the `ai-provider-for-universal-openai-api` directory to `/wp-content/plugins/`, or install via the WordPress Plugins screen.
+3. Activate the plugin through the Plugins screen.
+4. Go to **Settings → Connectors** and enter your API key for the **AI Provider for Universal OpenAI API** provider.
+5. Go to **Settings → AI Provider for Universal OpenAI API** to configure your endpoint URL and select default models.
 
-- **WordPress:** 7.0 or higher
-- **Requires at least:** 7.0
-- **Tested up to:** 7.0
-- **Stable tag:** 1.1.0
-- **PHP:** 7.4 or higher
-- **Requires PHP:** 7.4
-- **Required Plugin:** [WordPress AI Client](https://wordpress.org/plugins/ai/) (`ai`) must be active
+## Configuration
 
-## Installation & Setup
+### Settings Page
 
-### As a WordPress Plugin
+Navigate to **Settings → AI Provider for Universal OpenAI API**:
 
-1. Ensure the **WordPress AI Client** plugin (`ai`) is installed and activated.
-2. Clone or download this plugin into `wp-content/plugins/universal-openai-connector`.
-3. Activate **Universal OpenAI Connector** from the Plugins screen.
-4. Go to **Settings → Connectors** and enter your API key for the *Universal OpenAI Connector* provider.
-![screenshot-1](./wp-assets/screenshot-1.png)
-5. Go to **Settings → Universal OpenAI Connector** and enter your **API Endpoint URL**.
-![screenshot-2](./wp-assets/screenshot-2.png)
-6. Optionally select a **Default Text Model** and **Default Image Model** from the auto-populated dropdowns.
-7. Save settings.
+* **API Endpoint URL:** The base URL of your OpenAI-compatible service (defaults to `https://api.openai.com/v1`). Supports presets or custom URLs.
+* **Default Text Model:** Select the default model used for text generation. Populated dynamically from your endpoint.
+* **Default Image Model:** Select the default model used for image generation. Populated dynamically from your endpoint.
+* **Default Text-to-Speech Model:** Select the default model used for speech synthesis. Populated dynamically from your endpoint.
+* **Default Decision Model:** Select the default model used for decision-making and content evaluation. Populated dynamically from your endpoint.
 
-### As a Composer Package
+### API Key
 
-```bash
-composer require rtcamp/universal-openai-connector
-```
+Configure your API key in **Settings → Connectors** under the **AI Provider for Universal OpenAI API** provider. For local endpoints that do not require authentication, this field can be left blank.
 
-## Usage Guide
+### Local Endpoints
 
-### Accessing the Settings
+If you run a local AI server (Ollama, LM Studio, LocalAI) at `localhost`, `127.0.0.1`, or `::1`, the plugin automatically configures WordPress's HTTP client to permit requests to those addresses without disabling safe URL checks globally.
 
-Navigate to **Settings → Universal OpenAI Connector** in your WordPress admin to configure the plugin.
+## Usage with WordPress AI Client
 
-### Configuring Universal OpenAI Connector
-
-#### Setting Up Authentication (Optional)
-
-For services that require an API key:
-
-1. Go to **Settings → Connectors**.
-2. Enter your API key under the *Universal OpenAI Connector* provider and save.
-
-For local servers that do not require authentication, leave the field blank.
-
-#### Setting the Endpoint URL
-
-The plugin connects to `https://api.openai.com/v1` by default. To use a different service:
-
-1. Navigate to **Settings → Universal OpenAI Connector**.
-2. Enter the base URL of your API in the **API Endpoint URL** field (e.g. `http://localhost:11434/v1` for Ollama).
-3. Save your settings.
-
-You can also override the endpoint via the `OPENAI_COMPATIBLE_BASE_URL` environment variable — this takes priority over the admin setting.
-
-#### Selecting Default Models
-
-1. Navigate to **Settings → Universal OpenAI Connector**.
-2. The **Default Text Model** and **Default Image Model** dropdowns are populated automatically by querying the `/models` endpoint of your configured API (responses are cached for one hour).
-3. Select models to use as defaults for AI Client requests routed to this provider.
-4. Leave fields empty to let the AI Client choose the model per request.
-5. Save your settings.
-
-If you type a model ID that is not returned by the API it will still be saved and used.
+Once configured, the provider is available across WordPress through the AI Client:
 
 ### Text Generation
 
 ```php
-use WordPress\AI_Client\Prompt_Builder;
+use WordPress\AiClient\AiClient;
 
-$result = Prompt_Builder::create()
-    ->using_provider( 'openai_compatible' )
-    ->set_model( 'gpt-4o' ) // Any model available at your endpoint
-    ->set_system_instruction( 'You are a helpful assistant.' )
-    ->add_text_message( 'Write a short haiku about sunrise.' )
-    ->generate_text();
+$response = AiClient::prompt( 'Tell me a joke about WordPress.' )
+    ->usingProvider( 'openai_compatible' )
+    ->generateText();
+
+echo $response;
 ```
-
-#### Supported text generation options
-
-- Chat history
-- System instructions
-- JSON / structured output
-- Function / tool calling
-- Generation options: candidate count, max tokens, temperature, top-p, stop sequences, frequency penalty, presence penalty, custom options
-
-#### WordPress Ability
-
-You can use Universal OpenAI Connector for any WordPress AI Client feature that supports text generation, such as:
-
-![screenshot-3](./wp-assets/screenshot-3.png)
-
-- Title generation
-- Excerpt generation
-- Content summarization
-- Generate Review notes
 
 ### Image Generation
 
 ```php
-use WordPress\AI_Client\Prompt_Builder;
+use WordPress\AiClient\AiClient;
 
-$result = Prompt_Builder::create()
-    ->using_provider( 'openai_compatible' )
-    ->set_model( 'dall-e-3' ) // Image generation model at your endpoint
-    ->add_text_message( 'A serene mountain lake at sunset, photorealistic.' )
-    ->generate_image();
+$response = AiClient::prompt( 'A minimalist logo for a tech blog' )
+    ->usingProvider( 'openai_compatible' )
+    ->generateImage();
+
+$image_url = $response->getUrl();
 ```
-
-#### Supported image generation options
-
-- Output formats: PNG, JPEG, WebP
-- Aspect ratios: 1:1, 3:2, 2:3, 7:4, 4:7
-- File delivery: inline or remote URL
-- Custom options passthrough
-- Extended timeout (300 s) to accommodate slow generation backends
-
-#### WordPress Ability
-
-You can use Universal OpenAI Connector for any WordPress AI Client feature that supports image generation.
-![screenshot-4](./wp-assets/screenshot-4.png)
 
 ### Multimodal (Vision) Input
 
@@ -214,10 +151,65 @@ $result = Prompt_Builder::create()
 
 #### WordPress Ability
 
-You can use Universal OpenAI Connector's vision capabilities in any WordPress AI Client feature that supports image input, such as:
+You can use AI Provider for Universal OpenAI API's vision capabilities in any WordPress AI Client feature that supports image input, such as:
 
 - Alt text generation
 - Image captioning / analysis
+
+### Text-to-Speech (Audio Synthesis)
+
+Synthesize speech audio from text prompts using the `/v1/audio/speech` endpoint:
+
+```php
+use WordPress\AiClient\AiClient;
+
+$audio_file = AiClient::prompt( 'The quick brown fox jumps over the lazy dog.' )
+    ->usingProvider( 'openai_compatible' )
+    ->convertTextToSpeech();
+
+// Retrieve synthesized audio file data:
+$audio_bytes = base64_decode( $audio_file->getBase64Data() );
+$mime_type   = $audio_file->getMimeType(); // e.g. 'audio/mpeg'
+```
+
+Supported audio formats: MP3 (`audio/mpeg`), Opus (`audio/ogg`), WAV (`audio/wav`), FLAC (`audio/flac`), AAC (`audio/aac`).
+
+### Decision Making
+
+Evaluate content against typed questions using the `/v1/decisions` endpoint:
+
+```php
+use rtCamp\AIProviderUniversalOpenAI\Decisions\DecisionQuestion;
+use rtCamp\AIProviderUniversalOpenAI\Provider\OpenAiCompatibleProvider;
+
+// Instantiate the decision model (uses default decision model or specified model).
+$model = OpenAiCompatibleProvider::decisionModel();
+
+// Define typed evaluation questions.
+$questions = [
+    'is_urgent'  => DecisionQuestion::predicate( 'Does this customer message require urgent escalation?' ),
+    'department' => DecisionQuestion::choice(
+        'Which department should handle this request?',
+        [
+            'billing' => 'Billing and invoice inquiries',
+            'support' => 'Technical support and bug reports',
+            'sales'   => 'Sales inquiries and enterprise licensing',
+        ]
+    ),
+    'frustration' => DecisionQuestion::score(
+        'Rate customer frustration level',
+        [ '1 - Satisfied', '2 - Neutral', '3 - Frustrated', '4 - Extremely angry' ]
+    ),
+];
+
+// Execute decision request.
+$result = $model->decide( $incoming_message, $questions );
+
+// Access typed answers.
+$is_urgent   = $result->getAnswer( 'is_urgent' )->getProbability() > 0.8;
+$department  = $result->getAnswer( 'department' )->getChoice();
+$frustration = $result->getAnswer( 'frustration' )->getScore();
+```
 
 ### Environment Overrides
 
@@ -231,6 +223,37 @@ For advanced deployments, override defaults using environment variables:
 Environment variables take priority over database-stored settings.
 
 ## Developer Filters
+
+### `ai_provider_for_universal_openai_api_models_url`
+
+Filter the resolved URL used to fetch available models (with backwards-compatible `universal_openai_connector_models_url` fallback):
+
+```php
+add_filter( 'ai_provider_for_universal_openai_api_models_url', function ( string $url, string $endpoint ): string {
+    return $url;
+}, 10, 2 );
+```
+
+### `ai_provider_for_universal_openai_api_url`
+
+Filter the endpoint URL for any request path (with backwards-compatible `universal_openai_connector_url` fallback):
+
+```php
+add_filter( 'ai_provider_for_universal_openai_api_url', function ( string $url, string $path, string $base_url ): string {
+    return $url;
+}, 10, 3 );
+```
+
+### `ai_provider_for_universal_openai_api_endpoints`
+
+Filter or register custom preset endpoints in the admin dropdown:
+
+```php
+add_filter( 'ai_provider_for_universal_openai_api_endpoints', function ( array $endpoints ): array {
+    $endpoints['Custom Server'] = 'https://ai.example.com/v1';
+    return $endpoints;
+} );
+```
 
 ### `openai_compatible_text_generation_params`
 
@@ -254,15 +277,56 @@ add_filter( 'openai_compatible_image_generation_params', function ( array $param
 } );
 ```
 
+### `ai_provider_for_universal_openai_api_tts_params`
+
+Called before sending a text-to-speech request to `/v1/audio/speech`. Also supports `openai_compatible_tts_params`.
+
+```php
+add_filter( 'ai_provider_for_universal_openai_api_tts_params', function ( array $params ): array {
+    $params['speed'] = 1.0;
+    return $params;
+} );
+```
+
+### `ai_provider_for_universal_openai_api_decision_params`
+
+Called before sending a decision-making request to `/v1/decisions`. Also supports `openai_compatible_decision_params`.
+
+```php
+add_filter( 'ai_provider_for_universal_openai_api_decision_params', function ( array $params ): array {
+    return $params;
+} );
+```
+
+### `openai_compatible_is_likely_decision_model`
+
+Filter whether a given model ID should be treated as decision-capable in admin dropdowns:
+
+```php
+add_filter( 'openai_compatible_is_likely_decision_model', function ( bool $is_decision, string $model_id ): bool {
+    return $is_decision;
+}, 10, 2 );
+```
+
+### `openai_compatible_decision_models`
+
+Filter the array of detected decision model IDs:
+
+```php
+add_filter( 'openai_compatible_decision_models', function ( array $decision_models ): array {
+    return $decision_models;
+} );
+```
+
 ### Non-OpenAI backend compatibility
 
 When the configured endpoint URL does **not** contain `api.openai.com`, the plugin automatically strips parameters that strict OpenAI-compatible backends often reject: `response_format`, `n`, `quality`, `style`, and `reasoning_effort`. You can re-add any of these via the filters above if your backend supports them.
 
 ## Development & Contributing
 
-Universal OpenAI Connector is actively developed and maintained by [rtCamp](https://rtcamp.com/).
+AI Provider for Universal OpenAI API is actively developed and maintained by [rtCamp](https://rtcamp.com/).
 
-- **Repository:** [https://github.com/rtcamp/universal-openai-connector](https://github.com/rtcamp/universal-openai-connector)
+- **Repository:** [https://github.com/rtcamp/ai-provider-for-universal-openai-api](https://github.com/rtcamp/ai-provider-for-universal-openai-api)
 
 We welcome contributions! Please open an issue or pull request on GitHub.
 
@@ -293,7 +357,7 @@ npm run lint
 npm run plugin-zip
 ```
 
-This creates `universal-openai-connector.zip` in the plugin root, excluding all development-only files.
+This creates `ai-provider-for-universal-openai-api.zip` in the plugin root, excluding all development-only files.
 
 ## Frequently Asked Questions
 
@@ -321,9 +385,17 @@ Yes. When a model supports vision capabilities, the plugin automatically uses th
 
 Yes. Any endpoint that implements `/v1/images/generations` is supported. Configure the **Default Image Model** in settings to a model that supports image generation (e.g. `dall-e-3` for OpenAI).
 
+### Can this plugin synthesize speech (Text-to-Speech)?
+
+Yes. Any endpoint that implements `/v1/audio/speech` is supported. Configure the **Default Text-to-Speech Model** in settings (e.g. `tts-1`, `tts-1-hd`, or custom speech models). Supported formats include MP3, Opus, WAV, FLAC, and AAC.
+
+### Can this plugin evaluate decisions and classifications?
+
+Yes. Any endpoint that implements the `/v1/decisions` endpoint is supported. Configure the **Default Decision Model** in settings and evaluate content with typed questions (predicate, choice, score) using `OpenAiCompatibleProvider::decisionModel()`.
+
 ### Can I change the API endpoint?
 
-Yes. Enter the full base URL in **Settings → Universal OpenAI Connector → API Endpoint URL**, or set the `OPENAI_COMPATIBLE_BASE_URL` environment variable. The environment variable takes priority.
+Yes. Enter the full base URL in **Settings → AI Provider for Universal OpenAI API → API Endpoint URL**, or set the `OPENAI_COMPATIBLE_BASE_URL` environment variable. The environment variable takes priority.
 
 ### Why does text generation sometimes time out?
 
@@ -331,7 +403,7 @@ Large models can take significant time to respond, especially on self-hosted har
 
 ### Is multisite supported?
 
-The plugin can be network-activated on multisite. Each site's settings are managed independently via their own **Settings → Universal OpenAI Connector** page.
+The plugin can be network-activated on multisite. Each site's settings are managed independently via their own **Settings → AI Provider for Universal OpenAI API** page.
 
 ## Troubleshooting
 
@@ -362,8 +434,8 @@ The plugin can be network-activated on multisite. Each site's settings are manag
 
 ## Support & Community
 
-- **Issues & Bug Reports:** [GitHub Issues](https://github.com/rtcamp/universal-openai-connector/issues)
-- **Source Code:** [GitHub Repository](https://github.com/rtcamp/universal-openai-connector)
+- **Issues & Bug Reports:** [GitHub Issues](https://github.com/rtcamp/ai-provider-for-universal-openai-api/issues)
+- **Source Code:** [GitHub Repository](https://github.com/rtcamp/ai-provider-for-universal-openai-api)
 
 ## License
 

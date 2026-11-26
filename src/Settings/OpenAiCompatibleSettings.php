@@ -3,12 +3,12 @@
  * Settings for OpenAI-compatible provider.
  *
  * @since 1.0.0
- * @package rtCamp\UniversalOpenAiConnector
+ * @package rtCamp\AIProviderUniversalOpenAI
  */
 
 declare( strict_types=1 );
 
-namespace rtCamp\UniversalOpenAiConnector\Settings;
+namespace rtCamp\AIProviderUniversalOpenAI\Settings;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -22,19 +22,23 @@ use WordPress\AiClient\Providers\Http\DTO\ApiKeyRequestAuthentication;
  */
 class OpenAiCompatibleSettings {
 
-	private const OPTION_GROUP        = 'universal-openai-connector-settings';
-	private const OPTION_NAME         = 'universal_openai_connector_settings';
-	private const PAGE_SLUG           = 'universal-openai-connector';
-	private const SECTION_ID          = 'universal_openai_connector_main';
-	private const AJAX_ACTION_MODELS  = 'universal_openai_connector_models';
-	private const NONCE_ACTION        = 'universal_openai_connector_nonce';
-	private const KEY_ENDPOINT_URL    = 'endpoint_url';
-	private const KEY_TEXT_MODEL      = 'text_model';
-	private const KEY_IMAGE_MODEL     = 'image_model';
-	private const DEFAULT_ENDPOINT    = 'https://api.openai.com/v1';
-	private const DEFAULT_TEXT_MODEL  = '';
-	private const DEFAULT_IMAGE_MODEL = '';
-	private const MODELS_CACHE_TTL    = HOUR_IN_SECONDS;
+	private const OPTION_GROUP           = 'ai-provider-for-universal-openai-api-settings';
+	private const OPTION_NAME            = 'ai_provider_for_universal_openai_api_settings';
+	private const PAGE_SLUG              = 'ai-provider-for-universal-openai-api';
+	private const SECTION_ID             = 'ai_provider_for_universal_openai_api_main';
+	private const AJAX_ACTION_MODELS     = 'ai_provider_for_universal_openai_api_models';
+	private const NONCE_ACTION           = 'ai_provider_for_universal_openai_api_nonce';
+	private const KEY_ENDPOINT_URL       = 'endpoint_url';
+	private const KEY_TEXT_MODEL         = 'text_model';
+	private const KEY_IMAGE_MODEL        = 'image_model';
+	private const KEY_SPEECH_MODEL       = 'speech_model';
+	private const KEY_DECISION_MODEL     = 'decision_model';
+	private const DEFAULT_ENDPOINT       = 'https://api.openai.com/v1';
+	private const DEFAULT_TEXT_MODEL     = '';
+	private const DEFAULT_IMAGE_MODEL    = '';
+	private const DEFAULT_SPEECH_MODEL   = '';
+	private const DEFAULT_DECISION_MODEL = '';
+	private const MODELS_CACHE_TTL       = HOUR_IN_SECONDS;
 
 	/**
 	 * Initializes settings hooks.
@@ -46,6 +50,7 @@ class OpenAiCompatibleSettings {
 		add_action( 'admin_menu', [ $this, 'register_settings_screen' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_settings_script' ] );
 		add_action( 'wp_ajax_' . self::AJAX_ACTION_MODELS, [ $this, 'ajax_list_models' ] );
+		add_filter( 'ai_provider_for_universal_openai_api_models_url', [ $this, 'custom_ai_endpoint_models_url' ], 10, 2 );
 	}
 
 	/**
@@ -73,7 +78,7 @@ class OpenAiCompatibleSettings {
 
 		add_settings_field(
 			self::OPTION_NAME . '_endpoint_url',
-			__( 'API Endpoint URL', 'universal-openai-connector' ),
+			__( 'API Endpoint URL', 'ai-provider-for-universal-openai-api' ),
 			[ $this, 'render_endpoint_field' ],
 			self::PAGE_SLUG,
 			self::SECTION_ID,
@@ -82,7 +87,7 @@ class OpenAiCompatibleSettings {
 
 		add_settings_field(
 			self::OPTION_NAME . '_text_model',
-			__( 'Default Text Model', 'universal-openai-connector' ),
+			__( 'Default Text Model', 'ai-provider-for-universal-openai-api' ),
 			[ $this, 'render_text_model_field' ],
 			self::PAGE_SLUG,
 			self::SECTION_ID,
@@ -91,11 +96,29 @@ class OpenAiCompatibleSettings {
 
 		add_settings_field(
 			self::OPTION_NAME . '_image_model',
-			__( 'Default Image Model', 'universal-openai-connector' ),
+			__( 'Default Image Model', 'ai-provider-for-universal-openai-api' ),
 			[ $this, 'render_image_model_field' ],
 			self::PAGE_SLUG,
 			self::SECTION_ID,
 			[ 'label_for' => self::OPTION_NAME . '-image-model' ]
+		);
+
+		add_settings_field(
+			self::OPTION_NAME . '_speech_model',
+			__( 'Default Text-to-Speech Model', 'ai-provider-for-universal-openai-api' ),
+			[ $this, 'render_speech_model_field' ],
+			self::PAGE_SLUG,
+			self::SECTION_ID,
+			[ 'label_for' => self::OPTION_NAME . '-speech-model' ]
+		);
+
+		add_settings_field(
+			self::OPTION_NAME . '_decision_model',
+			__( 'Default Decision Model', 'ai-provider-for-universal-openai-api' ),
+			[ $this, 'render_decision_model_field' ],
+			self::PAGE_SLUG,
+			self::SECTION_ID,
+			[ 'label_for' => self::OPTION_NAME . '-decision-model' ]
 		);
 	}
 
@@ -106,8 +129,8 @@ class OpenAiCompatibleSettings {
 	 */
 	public function register_settings_screen(): void {
 		add_options_page(
-			__( 'Universal OpenAI Connector Settings', 'universal-openai-connector' ),
-			__( 'Universal OpenAI Connector Settings', 'universal-openai-connector' ),
+			__( 'AI Provider for Universal OpenAI API Settings', 'ai-provider-for-universal-openai-api' ),
+			__( 'Universal OpenAI API', 'ai-provider-for-universal-openai-api' ),
 			'manage_options',
 			self::PAGE_SLUG,
 			[ $this, 'render_screen' ]
@@ -129,29 +152,7 @@ class OpenAiCompatibleSettings {
 			return '';
 		}
 
-		// For localhost and custom ports, use a more permissive approach.
-		// First check if it's a localhost URL.
-		if ( strpos( $url, 'localhost' ) !== false || strpos( $url, '127.0.0.1' ) !== false ) {
-			// Basic validation for localhost URLs.
-			if ( ! preg_match( '/^https?:\/\/.+/', $url ) ) {
-				return '';
-			}
-			// Return the URL as-is (already trimmed).
-			return $url;
-		}
-
-		// For non-localhost URLs, use WordPress's stricter validation.
-		$escaped = esc_url_raw( $url );
-		if ( '' === $escaped ) {
-			// If esc_url_raw rejects it but it looks like a valid URL, try to sanitize it differently.
-			// This handles edge cases where esc_url_raw might be too strict.
-			if ( preg_match( '/^https?:\/\/.+/', $url ) ) {
-				return $url;
-			}
-			return '';
-		}
-
-		return $escaped;
+		return esc_url_raw( $url, [ 'http', 'https' ] );
 	}
 
 	/**
@@ -175,17 +176,25 @@ class OpenAiCompatibleSettings {
 		}
 		$endpoint_url = rtrim( $endpoint_url, '/' );
 
-		$text_model  = isset( $value[ self::KEY_TEXT_MODEL ] )
+		$text_model     = isset( $value[ self::KEY_TEXT_MODEL ] )
 			? sanitize_text_field( trim( (string) $value[ self::KEY_TEXT_MODEL ] ) )
 			: self::DEFAULT_TEXT_MODEL;
-		$image_model = isset( $value[ self::KEY_IMAGE_MODEL ] )
+		$image_model    = isset( $value[ self::KEY_IMAGE_MODEL ] )
 			? sanitize_text_field( trim( (string) $value[ self::KEY_IMAGE_MODEL ] ) )
 			: self::DEFAULT_IMAGE_MODEL;
+		$speech_model   = isset( $value[ self::KEY_SPEECH_MODEL ] )
+			? sanitize_text_field( trim( (string) $value[ self::KEY_SPEECH_MODEL ] ) )
+			: self::DEFAULT_SPEECH_MODEL;
+		$decision_model = isset( $value[ self::KEY_DECISION_MODEL ] )
+			? sanitize_text_field( trim( (string) $value[ self::KEY_DECISION_MODEL ] ) )
+			: self::DEFAULT_DECISION_MODEL;
 
 		return [
-			self::KEY_ENDPOINT_URL => $endpoint_url,
-			self::KEY_TEXT_MODEL   => $text_model,
-			self::KEY_IMAGE_MODEL  => $image_model,
+			self::KEY_ENDPOINT_URL   => $endpoint_url,
+			self::KEY_TEXT_MODEL     => $text_model,
+			self::KEY_IMAGE_MODEL    => $image_model,
+			self::KEY_SPEECH_MODEL   => $speech_model,
+			self::KEY_DECISION_MODEL => $decision_model,
 		];
 	}
 
@@ -199,19 +208,19 @@ class OpenAiCompatibleSettings {
 			return;
 		}
 		?>
-		<div class="wrap universal-openai-connector-settings-wrap">
+		<div class="wrap ai-provider-for-universal-openai-api-settings-wrap universal-openai-connector-settings-wrap">
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
-			<p><?php esc_html_e( 'Configure an OpenAI-compatible endpoint and choose default models used for text and image generation.', 'universal-openai-connector' ); ?></p>
+			<p><?php esc_html_e( 'Configure an OpenAI-compatible endpoint and choose default models used for text and image generation.', 'ai-provider-for-universal-openai-api' ); ?></p>
 
-			<div class="universal-openai-connector-info-banner">
-				<span class="universal-openai-connector-banner-icon" aria-hidden="true">
-					<img src="<?php echo esc_url( UNIVERSAL_OPENAI_CONNECTOR_PLUGIN_URL . 'assets/images/info.svg' ); ?>" width="18" height="18" alt="" />
+			<div class="ai-provider-for-universal-openai-api-info-banner universal-openai-connector-info-banner">
+				<span class="ai-provider-for-universal-openai-api-banner-icon universal-openai-connector-banner-icon" aria-hidden="true">
+					<img src="<?php echo esc_url( AI_PROVIDER_FOR_UNIVERSAL_OPENAI_API_PLUGIN_URL . 'assets/images/info.svg' ); ?>" width="18" height="18" alt="" />
 				</span>
 				<p>
 					<?php
 					printf(
 						/* translators: 1: opening anchor tag, 2: closing anchor tag */
-						esc_html__( 'Set your API key under %1$sSettings > Connectors%2$s for the Universal OpenAI Connector provider.', 'universal-openai-connector' ),
+						esc_html__( 'Set your API key under %1$sSettings > Connectors%2$s for the AI Provider for Universal OpenAI API provider.', 'ai-provider-for-universal-openai-api' ),
 						'<a href="' . esc_url( admin_url( 'options-connectors.php' ) ) . '">',
 						'</a>'
 					);
@@ -219,7 +228,7 @@ class OpenAiCompatibleSettings {
 				</p>
 			</div>
 
-			<form action="options.php" method="post" class="universal-openai-connector-card">
+			<form action="options.php" method="post" class="ai-provider-for-universal-openai-api-card universal-openai-connector-card">
 				<?php
 				settings_fields( self::OPTION_GROUP );
 				do_settings_sections( self::PAGE_SLUG );
@@ -239,21 +248,24 @@ class OpenAiCompatibleSettings {
 	 */
 	private static function get_preset_endpoints(): array {
 		$raw = apply_filters(
-			'universal_openai_connector_endpoints',
-			[
-				'OpenAI'       => 'https://api.openai.com/v1',
-				'Mistral AI'   => 'https://api.mistral.ai/v1',
-				'Together AI'  => 'https://api.together.xyz/v1',
-				'Groq'         => 'https://api.groq.com/openai/v1',
-				'Fireworks AI' => 'https://api.fireworks.ai/inference/v1',
-				'Xiaomi AI'    => 'https://api.ai.xiaomi.com/v1',
-				'NVIDIA NIM'   => 'https://integrate.api.nvidia.com/v1',
-				'OpenRouter'   => 'https://openrouter.ai/api/v1',
-				'Google'       => 'https://generativelanguage.googleapis.com/v1beta/openai',
-				'Anthropic'    => 'https://api.anthropic.com/v1',
-				'DeepSeek'     => 'https://api.deepseek.com/v1',
-				'Perplexity'   => 'https://api.perplexity.ai',
-			]
+			'ai_provider_for_universal_openai_api_endpoints',
+			apply_filters(
+				'universal_openai_connector_endpoints',
+				[
+					'OpenAI'       => 'https://api.openai.com/v1',
+					'Mistral AI'   => 'https://api.mistral.ai/v1',
+					'Together AI'  => 'https://api.together.xyz/v1',
+					'Groq'         => 'https://api.groq.com/openai/v1',
+					'Fireworks AI' => 'https://api.fireworks.ai/inference/v1',
+					'Xiaomi AI'    => 'https://api.ai.xiaomi.com/v1',
+					'NVIDIA NIM'   => 'https://integrate.api.nvidia.com/v1',
+					'OpenRouter'   => 'https://openrouter.ai/api/v1',
+					'Google'       => 'https://generativelanguage.googleapis.com/v1beta/openai',
+					'Anthropic'    => 'https://api.anthropic.com/v1',
+					'DeepSeek'     => 'https://api.deepseek.com/v1',
+					'Perplexity'   => 'https://api.perplexity.ai',
+				]
+			)
 		);
 
 		// Guard against a filter returning a non-array.
@@ -302,7 +314,7 @@ class OpenAiCompatibleSettings {
 		>
 			<div class="openai-compatible-endpoint-search-container">
 				<span class="openai-compatible-endpoint-search-icon" aria-hidden="true">
-					<img src="<?php echo esc_url( UNIVERSAL_OPENAI_CONNECTOR_PLUGIN_URL . 'assets/images/search.svg' ); ?>" width="14" height="14" alt="" />
+					<img src="<?php echo esc_url( AI_PROVIDER_FOR_UNIVERSAL_OPENAI_API_PLUGIN_URL . 'assets/images/search.svg' ); ?>" width="14" height="14" alt="" />
 				</span>
 				<input
 					type="text"
@@ -316,23 +328,23 @@ class OpenAiCompatibleSettings {
 					aria-autocomplete="list"
 					aria-controls="<?php echo esc_attr( $id ); ?>-listbox"
 					value="<?php echo esc_attr( $value ); ?>"
-					placeholder="<?php esc_attr_e( 'Search or enter custom URL', 'universal-openai-connector' ); ?>"
+					placeholder="<?php esc_attr_e( 'Search or enter custom URL', 'ai-provider-for-universal-openai-api' ); ?>"
 					class="openai-compatible-endpoint-search-input"
 				/>
 				<button
 					type="button"
 					id="openai-compatible-endpoint-toggle"
-					aria-label="<?php esc_attr_e( 'Toggle provider list', 'universal-openai-connector' ); ?>"
+					aria-label="<?php esc_attr_e( 'Toggle provider list', 'ai-provider-for-universal-openai-api' ); ?>"
 					aria-expanded="false"
 					aria-controls="<?php echo esc_attr( $id ); ?>-listbox"
 				>
-					<img src="<?php echo esc_url( UNIVERSAL_OPENAI_CONNECTOR_PLUGIN_URL . 'assets/images/chevron-down.svg' ); ?>" width="14" height="14" alt="" aria-hidden="true" />
+					<img src="<?php echo esc_url( AI_PROVIDER_FOR_UNIVERSAL_OPENAI_API_PLUGIN_URL . 'assets/images/chevron-down.svg' ); ?>" width="14" height="14" alt="" aria-hidden="true" />
 				</button>
 			</div>
 			<ul
 				role="listbox"
 				id="<?php echo esc_attr( $id ); ?>-listbox"
-				aria-label="<?php esc_attr_e( 'Provider suggestions', 'universal-openai-connector' ); ?>"
+				aria-label="<?php esc_attr_e( 'Provider suggestions', 'ai-provider-for-universal-openai-api' ); ?>"
 				class="openai-compatible-endpoint-presets-list"
 			></ul>
 		</div>
@@ -342,7 +354,7 @@ class OpenAiCompatibleSettings {
 			value="<?php echo esc_attr( $value ); ?>"
 		/>
 		<p class="description openai-compatible-endpoint-description">
-			<?php esc_html_e( 'Search a preset provider or type a custom base URL for your OpenAI-compatible API.', 'universal-openai-connector' ); ?>
+			<?php esc_html_e( 'Search a preset provider or type a custom base URL for your OpenAI-compatible API.', 'ai-provider-for-universal-openai-api' ); ?>
 		</p>
 		<?php
 	}
@@ -365,7 +377,7 @@ class OpenAiCompatibleSettings {
 			<span id="openai-compatible-text-model-status" class="openai-compatible-model-status"></span>
 		</div>
 		<p class="description">
-			<?php esc_html_e( 'Optional override. Leave as "Use AI Client default" to let WordPress AI Client choose.', 'universal-openai-connector' ); ?>
+			<?php esc_html_e( 'Optional override. Leave as "Use AI Client default" to let WordPress AI Client choose.', 'ai-provider-for-universal-openai-api' ); ?>
 		</p>
 		<?php
 	}
@@ -388,7 +400,53 @@ class OpenAiCompatibleSettings {
 			<span id="openai-compatible-image-model-status" class="openai-compatible-model-status"></span>
 		</div>
 		<p class="description">
-			<?php esc_html_e( 'Optional override. Leave as "Use AI Client default" to let WordPress AI Client choose.', 'universal-openai-connector' ); ?>
+			<?php esc_html_e( 'Optional override. Leave as "Use AI Client default" to let WordPress AI Client choose.', 'ai-provider-for-universal-openai-api' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Renders speech model dropdown.
+	 *
+	 * @since 1.2.0
+	 */
+	public function render_speech_model_field(): void {
+		$settings = self::get_settings();
+		$value    = (string) ( $settings[ self::KEY_SPEECH_MODEL ] ?? '' );
+		$id       = self::OPTION_NAME . '-speech-model';
+		$name     = self::OPTION_NAME . '[' . self::KEY_SPEECH_MODEL . ']';
+		?>
+		<div class="openai-compatible-model-select-wrapper">
+			<select id="<?php echo esc_attr( $id ); ?>" name="<?php echo esc_attr( $name ); ?>" class="regular-text">
+				<option value="<?php echo esc_attr( $value ); ?>"><?php echo esc_html( $value ); ?></option>
+			</select>
+			<span id="openai-compatible-speech-model-status" class="openai-compatible-model-status"></span>
+		</div>
+		<p class="description">
+			<?php esc_html_e( 'Optional override. Leave as "Use AI Client default" to let WordPress AI Client choose.', 'ai-provider-for-universal-openai-api' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Renders decision model dropdown.
+	 *
+	 * @since 1.2.0
+	 */
+	public function render_decision_model_field(): void {
+		$settings = self::get_settings();
+		$value    = (string) ( $settings[ self::KEY_DECISION_MODEL ] ?? '' );
+		$id       = self::OPTION_NAME . '-decision-model';
+		$name     = self::OPTION_NAME . '[' . self::KEY_DECISION_MODEL . ']';
+		?>
+		<div class="openai-compatible-model-select-wrapper">
+			<select id="<?php echo esc_attr( $id ); ?>" name="<?php echo esc_attr( $name ); ?>" class="regular-text">
+				<option value="<?php echo esc_attr( $value ); ?>"><?php echo esc_html( $value ); ?></option>
+			</select>
+			<span id="openai-compatible-decision-model-status" class="openai-compatible-model-status"></span>
+		</div>
+		<p class="description">
+			<?php esc_html_e( 'Optional override. Leave as "Use AI Client default" to let WordPress AI Client choose.', 'ai-provider-for-universal-openai-api' ); ?>
 		</p>
 		<?php
 	}
@@ -405,51 +463,60 @@ class OpenAiCompatibleSettings {
 			return;
 		}
 
-		$plugin_dir = UNIVERSAL_OPENAI_CONNECTOR_PLUGIN_DIR;
+		$plugin_dir = AI_PROVIDER_FOR_UNIVERSAL_OPENAI_API_PLUGIN_DIR;
 		$asset_file = $plugin_dir . 'build/admin/settings.asset.php';
 		$asset      = file_exists( $asset_file ) ? require $asset_file : []; // phpcs:ignore WordPressVIPMinimum.Files.IncludingFile.UsingVariable -- Asset file path is built from a known constant.
 
 		$dependencies = isset( $asset['dependencies'] ) ? $asset['dependencies'] : [];
-		$version      = isset( $asset['version'] ) ? $asset['version'] : UNIVERSAL_OPENAI_CONNECTOR_VERSION;
+		$version      = isset( $asset['version'] ) ? $asset['version'] : AI_PROVIDER_FOR_UNIVERSAL_OPENAI_API_VERSION;
 
 		wp_enqueue_script(
-			'universal-openai-connector-settings',
-			plugins_url( 'build/admin/settings.js', UNIVERSAL_OPENAI_CONNECTOR_PLUGIN_FILE ),
+			'ai-provider-for-universal-openai-api-settings',
+			plugins_url( 'build/admin/settings.js', AI_PROVIDER_FOR_UNIVERSAL_OPENAI_API_PLUGIN_FILE ),
 			$dependencies,
 			$version,
 			true
 		);
 
 		wp_enqueue_style(
-			'universal-openai-connector-settings',
-			plugins_url( 'build/admin/style-settings.css', UNIVERSAL_OPENAI_CONNECTOR_PLUGIN_FILE ),
+			'ai-provider-for-universal-openai-api-settings',
+			plugins_url( 'build/admin/style-settings.css', AI_PROVIDER_FOR_UNIVERSAL_OPENAI_API_PLUGIN_FILE ),
 			[],
 			$version
 		);
-		wp_style_add_data( 'universal-openai-connector-settings', 'rtl', 'replace' );
+		wp_style_add_data( 'ai-provider-for-universal-openai-api-settings', 'rtl', 'replace' );
+
+		$settings_data = [
+			'ajaxUrl'               => esc_url_raw(
+				add_query_arg(
+					[
+						'action'   => self::AJAX_ACTION_MODELS,
+						'_wpnonce' => wp_create_nonce( self::NONCE_ACTION ),
+					],
+					admin_url( 'admin-ajax.php' )
+				)
+			),
+			'selectedTextModel'     => self::get_selected_text_model(),
+			'selectedImageModel'    => self::get_selected_image_model(),
+			'selectedSpeechModel'   => self::get_selected_speech_model(),
+			'selectedDecisionModel' => self::get_selected_decision_model(),
+			'i18n'                  => [
+				'loading'         => __( 'Loading models…', 'ai-provider-for-universal-openai-api' ),
+				'loaded'          => __( 'models loaded.', 'ai-provider-for-universal-openai-api' ),
+				'errorLoad'       => __( 'Could not load models from endpoint.', 'ai-provider-for-universal-openai-api' ),
+				'aiClientDefault' => __( 'Use AI Client default', 'ai-provider-for-universal-openai-api' ),
+			],
+		];
 
 		wp_localize_script(
-			'universal-openai-connector-settings',
+			'ai-provider-for-universal-openai-api-settings',
+			'aiProviderForUniversalOpenAiApiSettings',
+			$settings_data
+		);
+		wp_localize_script(
+			'ai-provider-for-universal-openai-api-settings',
 			'universalOpenAiConnectorSettings',
-			[
-				'ajaxUrl'            => esc_url_raw(
-					add_query_arg(
-						[
-							'action'   => self::AJAX_ACTION_MODELS,
-							'_wpnonce' => wp_create_nonce( self::NONCE_ACTION ),
-						],
-						admin_url( 'admin-ajax.php' )
-					)
-				),
-				'selectedTextModel'  => self::get_selected_text_model(),
-				'selectedImageModel' => self::get_selected_image_model(),
-				'i18n'               => [
-					'loading'         => __( 'Loading models…', 'universal-openai-connector' ),
-					'loaded'          => __( 'models loaded.', 'universal-openai-connector' ),
-					'errorLoad'       => __( 'Could not load models from endpoint.', 'universal-openai-connector' ),
-					'aiClientDefault' => __( 'Use AI Client default', 'universal-openai-connector' ),
-				],
-			]
+			$settings_data
 		);
 	}
 
@@ -462,7 +529,7 @@ class OpenAiCompatibleSettings {
 		check_ajax_referer( self::NONCE_ACTION );
 
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( __( 'Insufficient permissions.', 'universal-openai-connector' ), 403 );
+			wp_send_json_error( __( 'Insufficient permissions.', 'ai-provider-for-universal-openai-api' ), 403 );
 		}
 
 		// Accept an optional endpoint URL POSTed by the settings page so models can be
@@ -487,15 +554,20 @@ class OpenAiCompatibleSettings {
 		}
 
 		$models_url = self::get_models_url( $endpoint );
-		$headers    = [
+
+		if ( ! wp_http_validate_url( $models_url ) ) {
+			wp_send_json_error( __( 'Invalid or disallowed endpoint URL.', 'ai-provider-for-universal-openai-api' ), 400 );
+		}
+
+		$headers = [
 			'Accept' => 'application/json',
 		];
-		if ( '' !== $api_key ) {
+		// Only attach the stored API key if fetching from the configured endpoint, preventing token leakage.
+		if ( '' !== $api_key && self::get_endpoint_url() === $endpoint ) {
 			$headers['Authorization'] = 'Bearer ' . $api_key;
 		}
 
-		// phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.wp_remote_get_wp_remote_get -- External request to configured provider endpoint.
-		$response = wp_remote_get(
+		$response = wp_safe_remote_get(
 			$models_url,
 			[
 				'headers' => $headers,
@@ -506,7 +578,7 @@ class OpenAiCompatibleSettings {
 			wp_send_json_error(
 				sprintf(
 					/* translators: %s: Error message. */
-					__( 'Could not fetch models. Error: %s', 'universal-openai-connector' ),
+					__( 'Could not fetch models. Error: %s', 'ai-provider-for-universal-openai-api' ),
 					$response->get_error_message()
 				),
 				500
@@ -517,7 +589,7 @@ class OpenAiCompatibleSettings {
 		$data = json_decode( $body, true );
 
 		if ( ! is_array( $data ) ) {
-			wp_send_json_error( __( 'Unexpected /models response format. Expected JSON object.', 'universal-openai-connector' ), 500 );
+			wp_send_json_error( __( 'Unexpected /models response format. Expected JSON object.', 'ai-provider-for-universal-openai-api' ), 500 );
 		}
 
 		$raw_models = [];
@@ -528,48 +600,13 @@ class OpenAiCompatibleSettings {
 		}
 
 		if ( [] === $raw_models ) {
-			wp_send_json_error( __( 'Unexpected /models response format. Expected JSON with a models or data array.', 'universal-openai-connector' ), 500 );
+			wp_send_json_error( __( 'Unexpected /models response format. Expected JSON with a models or data array.', 'ai-provider-for-universal-openai-api' ), 500 );
 		}
 
 		$models = array_values(
 			array_filter(
 				array_map(
-					static function ( $model ) {
-						if ( ! is_array( $model ) ) {
-							return null;
-						}
-
-						$type = isset( $model['type'] ) ? strtolower( trim( (string) $model['type'] ) ) : '';
-						if ( 'embedding' === $type ) {
-							return null;
-						}
-
-						$id = '';
-						if ( isset( $model['id'] ) && '' !== trim( (string) $model['id'] ) ) {
-							$id = trim( (string) $model['id'] );
-						} elseif ( isset( $model['key'] ) && '' !== trim( (string) $model['key'] ) ) {
-							$id = trim( (string) $model['key'] );
-						} elseif ( isset( $model['selected_variant'] ) && '' !== trim( (string) $model['selected_variant'] ) ) {
-							$id = trim( (string) $model['selected_variant'] );
-						}
-
-						if ( '' === $id ) {
-							return null;
-						}
-
-						$name = $id;
-						if ( isset( $model['name'] ) && '' !== trim( (string) $model['name'] ) ) {
-							$name = trim( (string) $model['name'] );
-						} elseif ( isset( $model['display_name'] ) && '' !== trim( (string) $model['display_name'] ) ) {
-							$name = trim( (string) $model['display_name'] );
-						}
-
-						return [
-							'id'       => $id,
-							'name'     => $name,
-							'is_image' => self::is_likely_image_model( $id ),
-						];
-					},
+					[ self::class, 'format_model_entry' ],
 					$raw_models
 				)
 			)
@@ -605,7 +642,16 @@ class OpenAiCompatibleSettings {
 		}
 
 		foreach ( self::fetch_all_models() as $model ) {
-			if ( ! self::is_likely_image_model( (string) $model['id'] ) ) {
+			if ( ! is_array( $model ) || empty( $model['id'] ) ) {
+				continue;
+			}
+			if ( isset( $model['is_text'] ) ) {
+				if ( $model['is_text'] ) {
+					return (string) $model['id'];
+				}
+				continue;
+			}
+			if ( ! self::is_likely_image_model( (string) $model['id'], $model ) && ! self::is_likely_speech_model( (string) $model['id'], $model ) && ! self::is_likely_decision_model( (string) $model['id'], $model ) ) {
 				return (string) $model['id'];
 			}
 		}
@@ -640,7 +686,84 @@ class OpenAiCompatibleSettings {
 		}
 
 		foreach ( self::fetch_all_models() as $model ) {
-			if ( self::is_likely_image_model( (string) $model['id'] ) ) {
+			if ( ! is_array( $model ) || empty( $model['id'] ) ) {
+				continue;
+			}
+			if ( ! empty( $model['is_image'] ) || self::is_likely_image_model( (string) $model['id'], $model ) ) {
+				return (string) $model['id'];
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Returns selected speech model.
+	 *
+	 * @since 1.2.0
+	 */
+	public static function get_selected_speech_model(): string {
+		$settings = self::get_settings();
+		return trim( (string) ( $settings[ self::KEY_SPEECH_MODEL ] ?? '' ) );
+	}
+
+	/**
+	 * Returns the effective speech model identifier.
+	 *
+	 * Returns the user-configured speech model when set. Otherwise fetches the
+	 * list of available models from the endpoint and returns the first model
+	 * that resembles a text-to-speech model, or an empty string if none is found.
+	 *
+	 * @since 1.2.0
+	 */
+	public static function get_effective_speech_model(): string {
+		$selected = self::get_selected_speech_model();
+		if ( '' !== $selected ) {
+			return $selected;
+		}
+
+		foreach ( self::fetch_all_models() as $model ) {
+			if ( ! is_array( $model ) || empty( $model['id'] ) ) {
+				continue;
+			}
+			if ( ! empty( $model['is_speech'] ) || self::is_likely_speech_model( (string) $model['id'], $model ) ) {
+				return (string) $model['id'];
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Returns selected decision model.
+	 *
+	 * @since 1.2.0
+	 */
+	public static function get_selected_decision_model(): string {
+		$settings = self::get_settings();
+		return trim( (string) ( $settings[ self::KEY_DECISION_MODEL ] ?? '' ) );
+	}
+
+	/**
+	 * Returns the effective decision model identifier.
+	 *
+	 * Returns the user-configured decision model when set. Otherwise fetches the
+	 * list of available models from the endpoint and returns the first model
+	 * that resembles a decision model, or an empty string if none is found.
+	 *
+	 * @since 1.2.0
+	 */
+	public static function get_effective_decision_model(): string {
+		$selected = self::get_selected_decision_model();
+		if ( '' !== $selected ) {
+			return $selected;
+		}
+
+		foreach ( self::fetch_all_models() as $model ) {
+			if ( ! is_array( $model ) || empty( $model['id'] ) ) {
+				continue;
+			}
+			if ( ! empty( $model['is_decision'] ) || self::is_likely_decision_model( (string) $model['id'], $model ) ) {
 				return (string) $model['id'];
 			}
 		}
@@ -655,7 +778,8 @@ class OpenAiCompatibleSettings {
 	 */
 	public static function get_endpoint_url(): string {
 		$settings = self::get_settings();
-		$url      = (string) $settings[ self::KEY_ENDPOINT_URL ];
+		$url      = isset( $settings[ self::KEY_ENDPOINT_URL ] ) ? (string) $settings[ self::KEY_ENDPOINT_URL ] : '';
+		$url      = self::sanitize_endpoint_url( $url );
 		if ( '' === trim( $url ) ) {
 			return self::DEFAULT_ENDPOINT;
 		}
@@ -672,6 +796,7 @@ class OpenAiCompatibleSettings {
 	 */
 	private static function get_models_url( string $endpoint ): string {
 		$models_url = $endpoint . '/models';
+		$models_url = apply_filters( 'ai_provider_for_universal_openai_api_models_url', $models_url, $endpoint );
 		return apply_filters( 'universal_openai_connector_models_url', $models_url, $endpoint );
 	}
 
@@ -683,8 +808,17 @@ class OpenAiCompatibleSettings {
 	 * @return array<string, string>
 	 */
 	public static function get_settings(): array {
-		$settings = (array) get_option( self::OPTION_NAME, [] );
-		return array_merge( self::get_default_settings(), $settings );
+		$settings = get_option( self::OPTION_NAME, null );
+		if ( null === $settings ) {
+			$settings = get_option( 'ai_provider_for_universal_openai_api', null );
+			if ( null === $settings ) {
+				$settings = get_option( 'universal_openai_connector_settings', null );
+				if ( null === $settings ) {
+					$settings = get_option( 'universal_openai_connector', [] );
+				}
+			}
+		}
+		return array_merge( self::get_default_settings(), (array) $settings );
 	}
 
 	/**
@@ -696,9 +830,11 @@ class OpenAiCompatibleSettings {
 	 */
 	private static function get_default_settings(): array {
 		return [
-			self::KEY_ENDPOINT_URL => self::DEFAULT_ENDPOINT,
-			self::KEY_TEXT_MODEL   => self::DEFAULT_TEXT_MODEL,
-			self::KEY_IMAGE_MODEL  => self::DEFAULT_IMAGE_MODEL,
+			self::KEY_ENDPOINT_URL   => self::DEFAULT_ENDPOINT,
+			self::KEY_TEXT_MODEL     => self::DEFAULT_TEXT_MODEL,
+			self::KEY_IMAGE_MODEL    => self::DEFAULT_IMAGE_MODEL,
+			self::KEY_SPEECH_MODEL   => self::DEFAULT_SPEECH_MODEL,
+			self::KEY_DECISION_MODEL => self::DEFAULT_DECISION_MODEL,
 		];
 	}
 
@@ -750,15 +886,19 @@ class OpenAiCompatibleSettings {
 		}
 
 		$models_url = self::get_models_url( $endpoint );
-		$headers    = [
+
+		if ( ! wp_http_validate_url( $models_url ) ) {
+			return [];
+		}
+
+		$headers = [
 			'Accept' => 'application/json',
 		];
 		if ( '' !== $api_key ) {
 			$headers['Authorization'] = 'Bearer ' . $api_key;
 		}
 
-		// phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.wp_remote_get_wp_remote_get -- External request to configured provider endpoint.
-		$response = wp_remote_get(
+		$response = wp_safe_remote_get(
 			$models_url,
 			[
 				'headers' => $headers,
@@ -786,42 +926,7 @@ class OpenAiCompatibleSettings {
 		$models = array_values(
 			array_filter(
 				array_map(
-					static function ( $model ) {
-						if ( ! is_array( $model ) ) {
-							return null;
-						}
-
-						$type = isset( $model['type'] ) ? strtolower( trim( (string) $model['type'] ) ) : '';
-						if ( 'embedding' === $type ) {
-							return null;
-						}
-
-						$id = '';
-						if ( isset( $model['id'] ) && '' !== trim( (string) $model['id'] ) ) {
-							$id = trim( (string) $model['id'] );
-						} elseif ( isset( $model['key'] ) && '' !== trim( (string) $model['key'] ) ) {
-							$id = trim( (string) $model['key'] );
-						} elseif ( isset( $model['selected_variant'] ) && '' !== trim( (string) $model['selected_variant'] ) ) {
-							$id = trim( (string) $model['selected_variant'] );
-						}
-
-						if ( '' === $id ) {
-							return null;
-						}
-
-						$name = $id;
-						if ( isset( $model['name'] ) && '' !== trim( (string) $model['name'] ) ) {
-							$name = trim( (string) $model['name'] );
-						} elseif ( isset( $model['display_name'] ) && '' !== trim( (string) $model['display_name'] ) ) {
-							$name = trim( (string) $model['display_name'] );
-						}
-
-						return [
-							'id'       => $id,
-							'name'     => $name,
-							'is_image' => self::is_likely_image_model( $id ),
-						];
-					},
+					[ self::class, 'format_model_entry' ],
 					$raw_models
 				)
 			)
@@ -835,16 +940,159 @@ class OpenAiCompatibleSettings {
 	}
 
 	/**
-	 * Returns true if the model ID resembles an image-generation model.
+	 * Extracts output modalities array from raw model data if present.
 	 *
-	 * Uses keyword matching on the lowercased model identifier, similar to
-	 * how the Ollama provider detects image-generation models.
+	 * @param array<string, mixed> $model_data Raw model data.
+	 * @return list<string> List of output modalities in lowercase.
+	 */
+	private static function extract_output_modalities( array $model_data ): array {
+		$modalities = [];
+		if ( isset( $model_data['architecture']['output_modalities'] ) && is_array( $model_data['architecture']['output_modalities'] ) ) {
+			$modalities = $model_data['architecture']['output_modalities'];
+		} elseif ( isset( $model_data['output_modalities'] ) && is_array( $model_data['output_modalities'] ) ) {
+			$modalities = $model_data['output_modalities'];
+		}
+
+		$normalized = [];
+		foreach ( $modalities as $mod ) {
+			if ( ! is_string( $mod ) || '' === trim( $mod ) ) {
+				continue;
+			}
+			$normalized[] = strtolower( trim( $mod ) );
+		}
+		return $normalized;
+	}
+
+	/**
+	 * Formats a raw model entry from an API response into a normalized model array.
+	 *
+	 * Inspects output modalities and endpoints (e.g. from OpenRouter) and applies
+	 * keyword heuristics as a fallback to categorize text, image, speech, and decision models.
+	 *
+	 * @since 1.2.0
+	 *
+	 * @param mixed $model Raw model data from API.
+	 * @return array{id: string, name: string, is_text: bool, is_image: bool, is_speech: bool, is_decision: bool}|null
+	 */
+	public static function format_model_entry( $model ): ?array {
+		if ( ! is_array( $model ) ) {
+			return null;
+		}
+
+		$type = isset( $model['type'] ) ? strtolower( trim( (string) $model['type'] ) ) : '';
+		if ( 'embedding' === $type ) {
+			return null;
+		}
+
+		$id = '';
+		if ( isset( $model['id'] ) && '' !== trim( (string) $model['id'] ) ) {
+			$id = trim( (string) $model['id'] );
+		} elseif ( isset( $model['key'] ) && '' !== trim( (string) $model['key'] ) ) {
+			$id = trim( (string) $model['key'] );
+		} elseif ( isset( $model['selected_variant'] ) && '' !== trim( (string) $model['selected_variant'] ) ) {
+			$id = trim( (string) $model['selected_variant'] );
+		}
+
+		if ( '' === $id ) {
+			return null;
+		}
+
+		$name = $id;
+		if ( isset( $model['name'] ) && '' !== trim( (string) $model['name'] ) ) {
+			$name = trim( (string) $model['name'] );
+		} elseif ( isset( $model['display_name'] ) && '' !== trim( (string) $model['display_name'] ) ) {
+			$name = trim( (string) $model['display_name'] );
+		}
+
+		$is_image    = self::is_likely_image_model( $id, $model );
+		$is_speech   = self::is_likely_speech_model( $id, $model );
+		$is_decision = self::is_likely_decision_model( $id, $model );
+		$is_text     = self::is_likely_text_model( $id, $model, $is_image, $is_speech );
+
+		return [
+			'id'          => $id,
+			'name'        => $name,
+			'is_text'     => $is_text,
+			'is_image'    => $is_image,
+			'is_speech'   => $is_speech,
+			'is_decision' => $is_decision,
+		];
+	}
+
+	/**
+	 * Returns true if the model is capable of generating text.
+	 *
+	 * Checks explicit output modalities and endpoints when available (e.g. OpenRouter).
+	 * Falls back to treating any model that is not exclusively an image or speech
+	 * model as a text generation model.
+	 *
+	 * @since 1.2.0
+	 *
+	 * @param string               $model_id   The model identifier.
+	 * @param array<string, mixed> $model_data Optional raw model data.
+	 * @param bool                 $is_image   Whether the model was identified as an image model.
+	 * @param bool                 $is_speech  Whether the model was identified as a speech model.
+	 * @return bool True if the model is a text model.
+	 */
+	public static function is_likely_text_model( string $model_id, array $model_data = [], bool $is_image = false, bool $is_speech = false ): bool {
+		$output_modalities = self::extract_output_modalities( $model_data );
+		if ( ! empty( $output_modalities ) ) {
+			return in_array( 'text', $output_modalities, true );
+		}
+
+		$endpoints = isset( $model_data['endpoints'] ) && is_array( $model_data['endpoints'] ) ? $model_data['endpoints'] : [];
+		if ( ! empty( $endpoints ) ) {
+			foreach ( [ '/api/v1/chat/completions', '/api/v1/completions', '/v1/chat/completions', '/v1/completions' ] as $endpoint ) {
+				if ( in_array( $endpoint, $endpoints, true ) ) {
+					return true;
+				}
+			}
+		}
+
+		$modality = isset( $model_data['architecture']['modality'] ) ? (string) $model_data['architecture']['modality'] : '';
+		if ( '' !== $modality ) {
+			if ( false !== strpos( $modality, '->text' ) || false !== strpos( $modality, '->text+' ) || false !== strpos( $modality, '+text' ) ) {
+				return true;
+			}
+		}
+
+		// Fallback for endpoints without modality metadata:
+		// Exclude pure image or speech models.
+		return ! ( $is_image || $is_speech );
+	}
+
+	/**
+	 * Returns true if the model ID or model data resembles an image-generation model.
+	 *
+	 * Uses output modalities/endpoints if available, falling back to keyword matching
+	 * on the lowercased model identifier.
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string $model_id The model identifier to inspect.
+	 * @param string               $model_id   The model identifier to inspect.
+	 * @param array<string, mixed> $model_data Optional raw model data.
+	 * @return bool True if the model resembles an image model.
 	 */
-	private static function is_likely_image_model( string $model_id ): bool {
+	public static function is_likely_image_model( string $model_id, array $model_data = [] ): bool {
+		if ( ! empty( $model_data['is_image'] ) ) {
+			return true;
+		}
+
+		$output_modalities = self::extract_output_modalities( $model_data );
+		if ( ! empty( $output_modalities ) ) {
+			return in_array( 'image', $output_modalities, true );
+		}
+
+		$endpoints = isset( $model_data['endpoints'] ) && is_array( $model_data['endpoints'] ) ? $model_data['endpoints'] : [];
+		if ( in_array( '/api/v1/images', $endpoints, true ) || in_array( '/v1/images/generations', $endpoints, true ) ) {
+			return true;
+		}
+
+		$modality = isset( $model_data['architecture']['modality'] ) ? (string) $model_data['architecture']['modality'] : '';
+		if ( '' !== $modality && false !== strpos( $modality, '->image' ) ) {
+			return true;
+		}
+
 		$lower    = strtolower( $model_id );
 		$keywords = [
 			'dall-e',
@@ -869,12 +1117,148 @@ class OpenAiCompatibleSettings {
 			'-image',
 			'/image',
 			'image-',
+			'hy-world',
+			'hy-image',
+			'k3-edit',
+			'muse-image',
 		];
 		foreach ( $keywords as $keyword ) {
-			if ( str_contains( $lower, $keyword ) ) {
+			if ( false !== strpos( $lower, $keyword ) ) {
 				return true;
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Returns true if the model ID or model data resembles a text-to-speech model.
+	 *
+	 * Uses output modalities/endpoints if available, falling back to keyword matching
+	 * on the lowercased model identifier.
+	 *
+	 * @since 1.2.0
+	 *
+	 * @param string               $model_id   The model identifier to inspect.
+	 * @param array<string, mixed> $model_data Optional raw model data.
+	 * @return bool True if the model resembles a speech model.
+	 */
+	public static function is_likely_speech_model( string $model_id, array $model_data = [] ): bool {
+		if ( ! empty( $model_data['is_speech'] ) ) {
+			return true;
+		}
+
+		$output_modalities = self::extract_output_modalities( $model_data );
+		if ( ! empty( $output_modalities ) ) {
+			return in_array( 'speech', $output_modalities, true ) || in_array( 'audio', $output_modalities, true );
+		}
+
+		$endpoints = isset( $model_data['endpoints'] ) && is_array( $model_data['endpoints'] ) ? $model_data['endpoints'] : [];
+		if ( in_array( '/api/v1/audio/speech', $endpoints, true ) || in_array( '/v1/audio/speech', $endpoints, true ) ) {
+			return true;
+		}
+
+		$modality = isset( $model_data['architecture']['modality'] ) ? (string) $model_data['architecture']['modality'] : '';
+		if ( '' !== $modality && ( false !== strpos( $modality, '->speech' ) || false !== strpos( $modality, '->audio' ) ) ) {
+			return true;
+		}
+
+		$lower    = strtolower( $model_id );
+		$keywords = [
+			'tts-',
+			'-tts',
+			'/tts',
+			'tts/',
+			'text-to-speech',
+			'speech-',
+			'-speech',
+			'audio-speech',
+			'phonon',
+			'elevenlabs/',
+			'eleven-',
+			'speechify/',
+			'fish-audio/',
+			'heygen-voice',
+			'voxtral',
+		];
+		foreach ( $keywords as $keyword ) {
+			if ( false !== strpos( $lower, $keyword ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Returns true if the model ID or model data resembles a decision-making model.
+	 *
+	 * Uses output modalities/endpoints if available, falling back to keyword matching
+	 * on the lowercased model identifier.
+	 *
+	 * @since 1.2.0
+	 *
+	 * @param string               $model_id   The model identifier to inspect.
+	 * @param array<string, mixed> $model_data Optional raw model data.
+	 * @return bool True if the model resembles a decision model.
+	 */
+	public static function is_likely_decision_model( string $model_id, array $model_data = [] ): bool {
+		if ( ! empty( $model_data['is_decision'] ) ) {
+			return true;
+		}
+
+		$output_modalities = self::extract_output_modalities( $model_data );
+		if ( ! empty( $output_modalities ) ) {
+			if ( in_array( 'decisions', $output_modalities, true ) || in_array( 'decision', $output_modalities, true ) ) {
+				return true;
+			}
+		}
+
+		$endpoints = isset( $model_data['endpoints'] ) && is_array( $model_data['endpoints'] ) ? $model_data['endpoints'] : [];
+		if ( in_array( '/api/alpha/decisions', $endpoints, true ) ) {
+			return true;
+		}
+
+		$modality = isset( $model_data['architecture']['modality'] ) ? (string) $model_data['architecture']['modality'] : '';
+		if ( '' !== $modality && ( false !== strpos( $modality, '->decisions' ) || false !== strpos( $modality, '->decision' ) ) ) {
+			return true;
+		}
+
+		$lower    = strtolower( $model_id );
+		$patterns = [
+			'/(?:^|[\/_\.-])decision(?:[\/_\.-]|$)/',
+			'/(?:^|[\/_\.-])decider(?:[\/_\.-]|$)/',
+			'/(?:^|[\/_\.-])luna(?:[\/_\.-]|$)/',
+			'/(?:^|[\/_\.-])systemone(?:[\/_\.-]|$)/',
+			'/(?:^|[\/_\.-])nimble(?:[\/_\.-]|$)/',
+			'/(?:^|[\/_\.-])tev1(?:[\/_\.-]|$)/',
+		];
+
+		$is_decision = false;
+		foreach ( $patterns as $pattern ) {
+			if ( 1 === preg_match( $pattern, $lower ) ) {
+				$is_decision = true;
+				break;
+			}
+		}
+
+		return (bool) apply_filters( 'openai_compatible_is_likely_decision_model', $is_decision, $model_id );
+	}
+
+	/**
+	 * Filter the models list request URL for Universal OpenAI Connector.
+	 *
+	 * For OpenRouter (openrouter.ai), append output_modalities query parameter
+	 * to fetch text, image, speech, and decision models, and sort by pricing-low-to-high.
+	 *
+	 * @param string $models_url The default constructed models URL.
+	 * @param string $endpoint   The user-configured base endpoint URL.
+	 * @return string The filtered models URL.
+	 */
+	public function custom_ai_endpoint_models_url( $models_url, $endpoint ) {
+		if ( false !== strpos( $endpoint, 'openrouter.ai' ) || false !== strpos( $models_url, 'openrouter.ai' ) ) {
+			$models_url = add_query_arg( 'order', 'pricing-low-to-high', $models_url );
+			return add_query_arg( 'output_modalities', 'text,image,speech,decisions', $models_url );
+		}
+
+		return $models_url;
 	}
 }
